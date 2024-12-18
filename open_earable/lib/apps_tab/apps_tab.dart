@@ -32,6 +32,24 @@ class AppsTab extends StatelessWidget {
 
   static List<AppInfo> sampleApps(BuildContext context, OpenEarable openEarable) {
     return [
+        AppInfo(
+        logoPath: "lib/apps_tab/recorder/assets/parcour.png",
+        title: "Parcour",
+        description: "Parcour game",
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Material(
+                child: Theme(
+                  data: materialTheme,
+                  child: Recorder(openEarable),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
       AppInfo(
         logoPath: "lib/apps_tab/recorder/assets/logo.png",
         title: "Recorder",

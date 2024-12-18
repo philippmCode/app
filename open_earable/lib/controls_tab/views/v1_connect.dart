@@ -109,12 +109,8 @@ class _ConnectCard extends State<V1ConnectCard> {
 
   String _batteryPercentageString(BluetoothController bleController) {
     int? percentage = bleController.earableSOCLeft;
-    if (percentage == null) {
-      return " (...%)";
-    } else {
-      return " ($percentage%)";
+    return " ($percentage%)";
     }
-  }
 
   Widget _getEarableInfo(BluetoothController bleController) {
     return Row(

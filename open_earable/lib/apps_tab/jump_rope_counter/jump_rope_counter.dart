@@ -101,12 +101,10 @@ class _JumpRopeCounterState extends State<JumpRopeCounter>
     SharedPreferences prefs = await SharedPreferences.getInstance();
     List<String>? recordings = prefs.getStringList('jumpRecordings');
     setState(() {
-      _recordings = recordings
-              ?.map((e) => JumpRecordResult(
+      _recordings = recordings?.map((e) => JumpRecordResult(
                   jumps: int.parse(e.split(',')[0]),
                   duration: Duration(seconds: int.parse(e.split(',')[1])),),)
-              .toList() ??
-          [];
+              .toList() ?? [];
     });
   }
 
