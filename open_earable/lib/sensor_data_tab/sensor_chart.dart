@@ -267,12 +267,8 @@ class _EarableDataChartState extends State<EarableDataChart> {
       _checkLength(_data);
       SensorData? maxXYZValue = maxBy(_data, (SensorData b) => b.getMax());
       SensorData? minXYZValue = minBy(_data, (SensorData b) => b.getMin());
-
-      if (minXYZValue == null) {
-        return;
-      }
       double maxY = maxXYZValue?.getMax() ?? 0.0;
-      double minY = minXYZValue.getMin();
+      double minY = minXYZValue?.getMin() ?? 0.0;
       double maxAbsValue = max(maxY.abs(), minY.abs());
       bool isIMUChart = widget.sensorName == "ACC" ||
           widget.sensorName == "GYRO" ||

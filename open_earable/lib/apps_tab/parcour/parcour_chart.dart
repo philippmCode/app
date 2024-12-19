@@ -176,11 +176,8 @@ class _JumpHeightChartState extends State<JumpHeightChart> {
       _checkLength(_data);
       DataValue? maxXYZValue = maxBy(_data, (DataValue b) => b.getMax());
       DataValue? minXYZValue = minBy(_data, (DataValue b) => b.getMin());
-      if (minXYZValue == null) {
-        return;
-      }
       double maxAbsValue =
-          max(maxXYZValue?.getMax().abs() ?? 0, minXYZValue.getMin().abs());
+          max(maxXYZValue?.getMax().abs() ?? 0, minXYZValue?.getMin().abs() ?? 0);
       _maxY = maxAbsValue;
 
       _minY = -maxAbsValue;
