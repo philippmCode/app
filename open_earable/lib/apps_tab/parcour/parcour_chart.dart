@@ -10,7 +10,7 @@ import 'dart:math';
 import 'dart:core';
 
 /// A class representing a Chart for Jump Height.
-class JumpHeightChart extends StatefulWidget {
+class ParcourChart extends StatefulWidget {
   /// The OpenEarable object.
   final OpenEarable openEarable;
 
@@ -18,14 +18,14 @@ class JumpHeightChart extends StatefulWidget {
   final String title;
 
   /// Constructs a JumpHeightChart object with an OpenEarable object and a title.
-  const JumpHeightChart(this.openEarable, this.title, {super.key});
+  const ParcourChart(this.openEarable, this.title, {super.key});
 
   @override
-  State<JumpHeightChart> createState() => _JumpHeightChartState();
+  State<ParcourChart> createState() => _JumpHeightChartState();
 }
 
 /// A class representing the state of a JumpHeightChart.
-class _JumpHeightChartState extends State<JumpHeightChart> {
+class _JumpHeightChartState extends State<ParcourChart> {
   /// The data of the chart.
   late List<DataValue> _data;
 
@@ -176,8 +176,11 @@ class _JumpHeightChartState extends State<JumpHeightChart> {
       _checkLength(_data);
       DataValue? maxXYZValue = maxBy(_data, (DataValue b) => b.getMax());
       DataValue? minXYZValue = minBy(_data, (DataValue b) => b.getMin());
+      if (minXYZValue == null) {
+        return;
+      }
       double maxAbsValue =
-          max(maxXYZValue?.getMax().abs() ?? 0, minXYZValue?.getMin().abs() ?? 0);
+          max(maxXYZValue?.getMax().abs() ?? 0, minXYZValue.getMin().abs());
       _maxY = maxAbsValue;
 
       _minY = -maxAbsValue;

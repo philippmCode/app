@@ -7,6 +7,7 @@ import 'package:open_earable/apps_tab/tightness/tightness.dart';
 import 'package:open_earable/apps_tab/recorder/lib/recorder.dart';
 import 'package:open_earable/apps_tab/jump_height_test/jump_height_test.dart';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
+import 'package:open_earable/apps_tab/parcour/parcour.dart';
 import '../shared/global_theme.dart';
 import 'package:open_earable/apps_tab/jump_rope_counter/jump_rope_counter.dart';
 import 'powernapper/home_screen.dart';
@@ -33,7 +34,7 @@ class AppsTab extends StatelessWidget {
   static List<AppInfo> sampleApps(BuildContext context, OpenEarable openEarable) {
     return [
         AppInfo(
-        logoPath: "lib/apps_tab/recorder/assets/parcour.png",
+        logoPath: "lib/apps_tab/jump_height_test/assets/logo.png",
         title: "Parcour",
         description: "Parcour game",
         onTap: () {
@@ -43,7 +44,7 @@ class AppsTab extends StatelessWidget {
               builder: (context) => Material(
                 child: Theme(
                   data: materialTheme,
-                  child: Recorder(openEarable),
+                  child: Parcour(openEarable),
                 ),
               ),
             ),
