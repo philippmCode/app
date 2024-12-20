@@ -8,9 +8,9 @@ class Player {
   double width;
   double height;
   bool isJumping;
-  double jumpVelocity;
   double gravity;
   double groundLevel;
+  double targetHeight;
 
   Player({
     required this.x,
@@ -18,19 +18,25 @@ class Player {
     required this.width,
     required this.height,
     this.isJumping = false,
-    this.jumpVelocity = 0.0,
+    this.targetHeight = 0.0,
     this.gravity = 9.8,
     required this.groundLevel,
   });
 
   void update(double dt) {
     if (isJumping) {
-      y -= jumpVelocity * dt;
-      jumpVelocity -= gravity * dt;
-      if (y >= groundLevel) {
-        y = groundLevel;
+      y -= (targetHeight) * dt; // Bewege den Spieler zur Zielhöhe
+      if (y <= groundLevel - targetHeight) {
+        y = groundLevel - targetHeight;
         isJumping = false;
-        jumpVelocity = 0.0;
+      }
+      print('Current height: $y'); // Debug-Ausgabe der aktuellen Höhe
+    } else {
+      if (y < groundLevel) {
+        y += (targetHeight) * dt; // Bewege den Spieler zurück zum Boden
+        if (y > groundLevel) {
+          y = groundLevel;
+        }
       }
     }
   }
@@ -38,8 +44,8 @@ class Player {
   void jump() {
     if (!isJumping) {
       isJumping = true;
-      jumpVelocity = 2 * height * gravity; // Sprunghöhe basierend auf der Höhe des Spielers
-      print('Jump initiated with velocity: $jumpVelocity'); // Debug-Ausgabe der Sprunggeschwindigkeit
+      targetHeight = 3 * height;
+      print('Jump initiated to height: $targetHeight'); // Debug-Ausgabe der Sprunggeschwindigkeit
     }
   }
 
@@ -73,6 +79,8 @@ class Obstacle {
 }
 
 class ParcourWidget extends StatefulWidget {
+  const ParcourWidget({super.key});
+
   @override
   _ParcourWidgetState createState() => _ParcourWidgetState();
 }
@@ -88,10 +96,10 @@ class _ParcourWidgetState extends State<ParcourWidget> {
     super.initState();
     player = Player(
       x: 50,
-      y: 300,
+      y: 100,
       width: 50,
       height: 50,
-      groundLevel: 300,
+      groundLevel: 100,
     );
     timer = Timer.periodic(Duration(milliseconds: 16), (timer) {
       double currentTime = timer.tick * 0.016;
@@ -111,10 +119,10 @@ class _ParcourWidgetState extends State<ParcourWidget> {
       if (obstacles.isEmpty || obstacles.last.x < 200) {
         obstacles.add(Obstacle(
           x: MediaQuery.of(context).size.width,
-          y: 300,
+          y: 100,
           width: 50,
           height: 50,
-        ));
+        ),);
       }
       checkCollisions();
     });
@@ -151,9 +159,28 @@ class GamePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Hintergrund zeichnen (Debug-Test)
-    final backgroundPaint = Paint()..color = Colors.green;
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), backgroundPaint);
+
+
+    // 0-Linie zeichnen
+    final zeroLinePaint = Paint()..color = Colors.black;
+    canvas.drawLine(Offset(0, player.groundLevel), Offset(size.width, player.groundLevel), zeroLinePaint);
+
+    // Vertikale Linie mit Höhenmarkierungen zeichnen
+    final verticalLinePaint = Paint()..color = Colors.blue;
+    final textPainter = TextPainter(
+      textAlign: TextAlign.left,
+      textDirection: TextDirection.ltr,
+    );
+
+    for (double i = 0; i <= size.height; i += 50) {
+      canvas.drawLine(Offset(0, i), Offset(10, i), verticalLinePaint);
+      textPainter.text = TextSpan(
+        text: i.toString(),
+        style: TextStyle(color: Colors.white, fontSize: 12),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(15, i - 6));
+    }
 
     // Spieler zeichnen
     final playerPaint = Paint()..color = Colors.yellow;
