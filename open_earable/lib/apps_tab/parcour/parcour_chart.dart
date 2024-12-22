@@ -21,11 +21,11 @@ class ParcourChart extends StatefulWidget {
   const ParcourChart(this.openEarable, this.title, {super.key});
 
   @override
-  State<ParcourChart> createState() => _JumpHeightChartState();
+  State<ParcourChart> createState() => _ParcourChartState();
 }
 
 /// A class representing the state of a JumpHeightChart.
-class _JumpHeightChartState extends State<ParcourChart> {
+class _ParcourChartState extends State<ParcourChart> {
   /// The data of the chart.
   late List<DataValue> _data;
 
@@ -80,6 +80,14 @@ class _JumpHeightChartState extends State<ParcourChart> {
   /// The height of the jump.
   double _height = 0.0;
 
+  /// Flag to indicate if the height is over 10 cm.
+  bool _isHeightOverThreshold = false;
+
+    late Player player;
+    List<Obstacle> obstacles = [];
+    late Timer timer;
+    double lastUpdateTime = 0.0;
+      
   /// Sets up the listeners for the data.
   void _setupListeners() {
     _kalmanX = SimpleKalman(
@@ -103,13 +111,6 @@ class _JumpHeightChartState extends State<ParcourChart> {
       int timestamp = data["timestamp"];
       _pitch = data["EULER"]["PITCH"];
 
-      XYZValue rawAccData = XYZValue(
-        timestamp: timestamp,
-        x: data["ACC"]["X"],
-        y: data["ACC"]["Y"],
-        z: data["ACC"]["Z"],
-        units: {"X": "m/s²", "Y": "m/s²", "Z": "m/s²"},
-      );
       XYZValue filteredAccData = XYZValue(
         timestamp: timestamp,
         x: _kalmanX.filtered(data["ACC"]["X"]),
@@ -119,15 +120,13 @@ class _JumpHeightChartState extends State<ParcourChart> {
       );
 
       switch (widget.title) {
-        case "Height Data":
+        case "Parcour":
           DataValue height = _calculateHeightData(filteredAccData);
           _updateData(height);
           break;
-        case "Raw Acceleration Data":
-          _updateData(rawAccData);
-          break;
-        case "Filtered Acceleration Data":
-          _updateData(filteredAccData);
+        case "Height Data":
+          DataValue height = _calculateHeightData(filteredAccData);
+          _updateData(height);
           break;
         default:
           throw ArgumentError("Invalid tab title.");
@@ -186,21 +185,20 @@ class _JumpHeightChartState extends State<ParcourChart> {
       _minY = -maxAbsValue;
       _maxX = value._timestamp;
       _minX = _data[0]._timestamp;
+
+      _isHeightOverThreshold = _height > 0.1;
     });
   }
 
   /// Gets the color of the chart lines.
   List<String> _getColor(String title) {
     switch (title) {
+        case "Parcour":
+        // Blue, Orange, and Teal - Good for colorblindness
+        return ['#007bff', '#ff7f0e', '#2ca02c'];
       case "Height Data":
         // Blue, Orange, and Teal - Good for colorblindness
         return ['#007bff', '#ff7f0e', '#2ca02c'];
-      case "Raw Acceleration Data":
-        // Purple, Magenta, and Cyan - Diverse hue and brightness
-        return ['#9467bd', '#d62728', '#17becf'];
-      case "Filtered Acceleration Data":
-        // Olive, Brown, and Navy - High contrast
-        return ['#8c564b', '#e377c2', '#1f77b4'];
       default:
         throw ArgumentError("Invalid tab title.");
     }
@@ -208,12 +206,26 @@ class _JumpHeightChartState extends State<ParcourChart> {
 
   @override
   void initState() {
+    print("init von parcour_chart");
     super.initState();
     _data = [];
     colors = _getColor(widget.title);
     _minY = -25;
     _maxY = 25;
     _setupListeners();
+        player = Player(
+        x: 150,
+        y: 100,
+        width: 50,
+        height: 50,
+        groundLevel: 100,
+    );
+    timer = Timer.periodic(Duration(milliseconds: 16), (timer) {
+      double currentTime = timer.tick * 0.016;
+      double dt = currentTime - lastUpdateTime;
+      lastUpdateTime = currentTime;
+      updateGame(dt);
+    });
   }
 
   @override
@@ -229,6 +241,38 @@ class _JumpHeightChartState extends State<ParcourChart> {
     }
   }
 
+  void updateGame(double dt) {
+    print("updating game");
+    print("dt: $dt");
+    setState(() {
+      player.update(dt);
+      print("Player updated");
+      for (var obstacle in obstacles) {
+        obstacle.update(dt);
+      }
+      print("Obstacles updated");
+      obstacles.removeWhere((obstacle) => obstacle.x < -obstacle.width);
+      if (obstacles.isEmpty || obstacles.last.x < 200) {
+        obstacles.add(Obstacle(
+          x: MediaQuery.of(context).size.width,
+          y: 100,
+          width: 50,
+          height: 50,
+        ),);
+      }
+      checkCollisions();
+    });
+  }
+
+  void checkCollisions() {
+    for (var obstacle in obstacles) {
+      if (player.getRect().overlaps(obstacle.getRect())) {
+        // Kollision erkannt, Spiel beenden oder Leben verlieren
+        timer.cancel();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.title == "Height Data") {
@@ -241,30 +285,29 @@ class _JumpHeightChartState extends State<ParcourChart> {
           data: _data,
         ),
       ];
+    } else if (widget.title == "Parcour") {
+      print("parcour chart building");
+      double currentTime = DateTime.now().millisecondsSinceEpoch / 1000.0;
+      double dt = currentTime - lastUpdateTime;
+      lastUpdateTime = currentTime;
+      updateGame(dt);
+      return GestureDetector(
+        onTap: () {
+          player.jump();
+        },
+        child: Column(
+          children: [
+            Expanded(
+              child: CustomPaint(
+              painter: ParcourPainter(player: player, obstacles: obstacles),
+              child: Container(),
+              ),
+            ),
+          ],
+        ),
+      );
     } else {
-      seriesList = [
-        charts.Series<DataValue, int>(
-          id: 'X${_data.isNotEmpty ? " (${_data[0]._units['X']})" : ""}',
-          colorFn: (_, __) => charts.Color.fromHex(code: colors[0]),
-          domainFn: (DataValue data, _) => data._timestamp,
-          measureFn: (DataValue data, _) => (data as XYZValue).x,
-          data: _data,
-        ),
-        charts.Series<DataValue, int>(
-          id: 'Y${_data.isNotEmpty ? " (${_data[0]._units['Y']})" : ""}',
-          colorFn: (_, __) => charts.Color.fromHex(code: colors[1]),
-          domainFn: (DataValue data, _) => data._timestamp,
-          measureFn: (DataValue data, _) => (data as XYZValue).y,
-          data: _data,
-        ),
-        charts.Series<DataValue, int>(
-          id: 'Z${_data.isNotEmpty ? " (${_data[0]._units['Z']})" : ""}',
-          colorFn: (_, __) => charts.Color.fromHex(code: colors[2]),
-          domainFn: (DataValue data, _) => data._timestamp,
-          measureFn: (DataValue data, _) => (data as XYZValue).z,
-          data: _data,
-        ),
-      ];
+      throw ArgumentError("Invalid tab title.");
     }
 
     return Column(
@@ -405,5 +448,147 @@ class Jump extends DataValue {
   @override
   String toString() {
     return "timestamp: ${_time.millisecondsSinceEpoch}\nheight $_height";
+  }
+}
+
+class Player {
+  double x;
+  double y;
+  double width;
+  double height;
+  bool isJumping;
+  double gravity;
+  double groundLevel;
+  double targetHeight;
+
+  Player({
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.height,
+    this.isJumping = false,
+    this.targetHeight = 0.0,
+    this.gravity = 9.8,
+    required this.groundLevel,
+  });
+
+  void update(double dt) {
+    if (isJumping) {
+      y -= (targetHeight) * dt; // Bewege den Spieler zur Zielhöhe
+      if (y <= groundLevel - targetHeight) {
+        y = groundLevel - targetHeight;
+        isJumping = false;
+      }
+      print('Current player height: $y'); // Debug-Ausgabe der aktuellen Höhe
+    } else {
+      print("player is not jumping");
+      if (y < groundLevel) {
+        y += (targetHeight) * dt; // Bewege den Spieler zurück zum Boden
+        if (y > groundLevel) {
+          y = groundLevel;
+        }
+      }
+    }
+    print("position: $x, $y");
+  }
+
+  void jump() {
+    if (!isJumping) {
+      isJumping = true;
+      targetHeight = 3 * height;
+      print('Jump initiated to height: $targetHeight'); // Debug-Ausgabe der Sprunggeschwindigkeit
+    }
+  }
+
+  Rect getRect() {
+    return Rect.fromLTWH(x, y, width, height);
+  }
+}
+
+class Obstacle {
+  double x;
+  double y;
+  double width;
+  double height;
+  double speed;
+
+  Obstacle({
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.height,
+    this.speed = 200.0,
+  });
+
+  void update(double dt) {
+    x -= speed * dt;
+    print("new obstacle position: $x, $y");
+  }
+
+  Rect getRect() {
+    return Rect.fromLTWH(x, y, width, height);
+  }
+}
+
+class ParcourPainter extends CustomPainter {
+
+  final Player player;
+  final List<Obstacle> obstacles;
+
+  ParcourPainter({required this.player, required this.obstacles});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // 0-Linie zeichnen
+    print("painting");
+    final zeroLinePaint = Paint()..color = Colors.black;
+    canvas.drawLine(Offset(0, size.height / 2), Offset(size.width, size.height / 2), zeroLinePaint);
+
+    // Vertikale Linie mit Höhenmarkierungen zeichnen
+    final verticalLinePaint = Paint()..color = Colors.blue;
+    final textPainter = TextPainter(
+      textAlign: TextAlign.left,
+      textDirection: TextDirection.ltr,
+    );
+
+    for (double i = 0; i <= size.height; i += 50) {
+      canvas.drawLine(Offset(0, i), Offset(10, i), verticalLinePaint);
+      textPainter.text = TextSpan(
+        text: i.toString(),
+        style: TextStyle(color: Colors.white, fontSize: 12),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(15, i - 6));
+    }
+
+        // Spieler zeichnen
+    final playerPaint = Paint()..color = Colors.yellow;
+    canvas.drawRect(player.getRect(), playerPaint);
+    print('Player: ${player.getRect()}'); // Debug-Ausgabe
+
+    // Hindernisse zeichnen
+    final obstaclePaint = Paint()..color = Colors.red;
+    for (var obstacle in obstacles) {
+      canvas.drawRect(obstacle.getRect(), obstaclePaint);
+      print('Obstacle: ${obstacle.getRect()}'); // Debug-Ausgabe
+    }
+
+    // Horizontale Skala auf der x-Achse zeichnen
+    final horizontalLinePaint = Paint()..color = Colors.green;
+    for (double i = 0; i <= size.width; i += 50) {
+      canvas.drawLine(Offset(i, player.groundLevel - 10), Offset(i, player.groundLevel + 10), horizontalLinePaint);
+      textPainter.text = TextSpan(
+        text: i.toString(),
+        style: TextStyle(color: Colors.white, fontSize: 12),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(i - 10, player.groundLevel + 15));
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    print("we should repaint");
+    return true;
   }
 }

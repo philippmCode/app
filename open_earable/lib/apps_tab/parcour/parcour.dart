@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:open_earable/apps_tab/jump_height_test/jump_height_chart.dart';
+import 'package:open_earable/apps_tab/parcour/parcour_chart.dart';
 import 'dart:async';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'package:simple_kalman/simple_kalman.dart';
 import 'dart:math';
 import 'package:open_earable/shared/earable_not_connected_warning.dart';
-import 'parcour_widget.dart'; // Importiere das Spiel-Widget
 
 /// An app that lets you test your jump height using an OpenEarable device.
 class Parcour extends StatefulWidget {
@@ -80,7 +79,7 @@ class _ParcourState extends State<Parcour>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(vsync: this, length: 4); // Anzahl der Tabs auf 4 erhöhen
+    _tabController = TabController(vsync: this, length: 3);
     // Set up listeners for sensor data.
     if (widget.openEarable.bleManager.connected) {
       // Set sampling rate to maximum.
@@ -101,6 +100,7 @@ class _ParcourState extends State<Parcour>
 
   /// Sets up listeners to receive sensor data from the OpenEarable device.
   void _setupListeners() {
+    print("Setting up listeners");
     _imuSubscription = widget.openEarable.sensorManager
         .subscribeToSensorData(0)
         .listen((data) {
@@ -111,6 +111,7 @@ class _ParcourState extends State<Parcour>
       setState(() {
         _jumpDuration = DateTime.now().difference(_startOfJump!);
       });
+      print("calling to process Sensor Data");
       _processSensorData(data);
     });
   }
@@ -118,6 +119,7 @@ class _ParcourState extends State<Parcour>
   /// Starts the jump height measurement process.
   /// It sets the sampling rate, initializes or resets variables, and begins listening to sensor data.
   void _startJump() {
+    print("Starting jump");
     _startOfJump = DateTime.now();
 
     setState(() {
@@ -142,6 +144,7 @@ class _ParcourState extends State<Parcour>
 
   /// Initializes Kalman filters for accelerometer data.
   void _initializeKalmanFilters() {
+    print("Initializing Kalman filters");
     _kalmanX = SimpleKalman(
       errorMeasure: _errorMeasureAcc,
       errorEstimate: _errorMeasureAcc,
@@ -161,6 +164,7 @@ class _ParcourState extends State<Parcour>
 
   /// Processes incoming sensor data and updates jump height.
   void _processSensorData(Map<String, dynamic> data) {
+    print("Processing sensor data");
     /// Kalman filtered accelerometer data for X.
     _accX = _kalmanX.filtered(data["ACC"]["X"]);
 
@@ -193,30 +197,29 @@ class _ParcourState extends State<Parcour>
   /// If the device is stationary, the velocity is reset to 0.
   /// Otherwise, it integrates the current acceleration to update velocity and height.
   void _updateHeight(double currentAcc) {
+    print("Updating height");
+    if (_deviceIsStationary(0.3)) {
+      _velocity = 0.0;
+      _height = 0.0;
+    } else {
+      // Integrate acceleration to get velocity.
+      _velocity += currentAcc * _timeSlice;
+
+      // Integrate velocity to get height.
+      _height += _velocity * _timeSlice;
+    }
+
+    // Prevent height from going negative.
+    _height = max(0, _height);
+
+    // Update maximum height if the current height is greater.
+    if (_height > _maxHeight) {
+      _maxHeight = _height;
+    }
+
     setState(() {
-      if (_deviceIsStationary(0.3)) {
-        _velocity = 0.0;
-        _height = 0.0;
-      } else {
-        // Integrate acceleration to get velocity.
-        _velocity += currentAcc * _timeSlice;
-
-        // Integrate velocity to get height.
-        _height += _velocity * _timeSlice;
-      }
-
-      // Prevent height from going negative.
-      _height = max(0, _height);
-
-      // Update maximum height if the current height is greater.
-      if (_height > _maxHeight) {
-        _maxHeight = _height;
-      }
-
       _jumpData.add(Jump(DateTime.now(), _height));
     });
-    // For debugging.
-    // print("Stationary: ${deviceIsStationary(0.3)}, Acc: $currentAcc, Vel: $velocity, Height: $height");
   }
 
   String _prettyDuration(Duration duration) {
@@ -224,29 +227,32 @@ class _ParcourState extends State<Parcour>
     return '${seconds.toStringAsFixed(2)} s';
   }
 
-  /// Builds the UI for the jump height test.
+  /// Builds the UI for the Parcour game.
   /// It displays a line chart of jump height over time and the maximum jump height achieved.
   // This build function is getting a little too big. Consider refactoring.
   @override
   Widget build(BuildContext context) {
+    print("wir builden in parcour.dart");
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: Text('Parcour Screen'),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.grey,
-          tabs: [
-            Tab(text: 'Height'),
-            Tab(text: 'Raw Acc.'),
-            Tab(text: 'Filtered Acc.'),
-            Tab(text: 'Parcour'), // Neuer Tab für das Spiel
-          ],
-        ),
+        title: Text('Parcour'),
       ),
       body: Column(
         children: [
+          TabBar(
+            controller: _tabController,
+            // Color of the underline indicator
+            indicatorColor: Colors.white,
+            // Color of the active tab label
+            labelColor: Colors.white,
+            // Color of the inactive tab labels
+            unselectedLabelColor: Colors.grey,
+            tabs: [
+              Tab(text: 'Parcour'),
+              Tab(text: 'Height'),
+            ],
+          ),
           Expanded(
             child: (!widget.openEarable.bleManager.connected)
                 ? EarableNotConnectedWarning()
@@ -278,10 +284,8 @@ class _ParcourState extends State<Parcour>
     return TabBarView(
       controller: _tabController,
       children: [
-        JumpHeightChart(widget.openEarable, "Height Data"),
-        JumpHeightChart(widget.openEarable, "Raw Acceleration Data"),
-        JumpHeightChart(widget.openEarable, "Filtered Acceleration Data"),
-        ParcourWidget(), // Das Spiel-Widget als neuer Tab
+        ParcourChart(widget.openEarable, "Parcour"),
+        ParcourChart(widget.openEarable, "Height Data"),
       ],
     );
   }
@@ -290,7 +294,7 @@ class _ParcourState extends State<Parcour>
     return Column(
       children: [
         Text(
-          'Max height: ${_maxHeight.toStringAsFixed(2)} m',
+          'Actual height: ${_height.toStringAsFixed(2)} m',
           style: Theme.of(context).textTheme.headlineMedium,
         ),
         Text(
