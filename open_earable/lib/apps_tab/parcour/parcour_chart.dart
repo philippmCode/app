@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:open_earable/apps_tab/parcour/parcour.dart';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
@@ -417,9 +416,6 @@ abstract class DataValue {
   /// The timestamp of the data.
   final int _timestamp;
 
-  /// The units of the data.
-  final Map<dynamic, dynamic> _units;
-
   /// Returns the minimum value of the data.
   double getMin();
 
@@ -428,8 +424,7 @@ abstract class DataValue {
 
   /// Constructs a DataValue object with a timestamp and units.
   DataValue({required int timestamp, required Map<dynamic, dynamic> units})
-      : _units = units,
-        _timestamp = timestamp;
+      : _timestamp = timestamp;
 }
 
 /// A class representing a generic XYZ value.

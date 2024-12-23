@@ -54,11 +54,7 @@ class _ParcourState extends State<Parcour>
   /// Manages the game state.
   final GameState gameState = GameState();
 
-  /// Stores the start time of a jump test.
-  DateTime? _startOfJump;
 
-  /// Stores the duration of a jump test.
-  Duration _jumpDuration = Duration.zero;
 
   /// Current height calculated from sensor data.
   double _height = 0.0;
@@ -141,7 +137,6 @@ class _ParcourState extends State<Parcour>
         return;
       }
       setState(() {
-        _jumpDuration = DateTime.now().difference(_startOfJump!);
       });
       ///print("calling to process Sensor Data");
       _processSensorData(data);
@@ -152,7 +147,6 @@ class _ParcourState extends State<Parcour>
   /// It sets the sampling rate, initializes or resets variables, and begins listening to sensor data.
   void _startJump() {
     print("Starting jump");
-    _startOfJump = DateTime.now();
     gameState.initializeTimer();
     gameState.startGame();
 
@@ -257,10 +251,6 @@ class _ParcourState extends State<Parcour>
     });
   }
 
-  String _prettyDuration(Duration duration) {
-    var seconds = duration.inMilliseconds / 1000;
-    return '${seconds.toStringAsFixed(2)} s';
-  }
 
   /// Builds the UI for the Parcour game.
   /// It displays a line chart of jump height over time and the maximum jump height achieved.
