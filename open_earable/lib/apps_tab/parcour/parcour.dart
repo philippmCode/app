@@ -100,7 +100,7 @@ class _ParcourState extends State<Parcour>
 
   /// Sets up listeners to receive sensor data from the OpenEarable device.
   void _setupListeners() {
-    print("Setting up listeners");
+    ///print("Setting up listeners");
     _imuSubscription = widget.openEarable.sensorManager
         .subscribeToSensorData(0)
         .listen((data) {
@@ -111,7 +111,7 @@ class _ParcourState extends State<Parcour>
       setState(() {
         _jumpDuration = DateTime.now().difference(_startOfJump!);
       });
-      print("calling to process Sensor Data");
+      ///print("calling to process Sensor Data");
       _processSensorData(data);
     });
   }
@@ -144,7 +144,7 @@ class _ParcourState extends State<Parcour>
 
   /// Initializes Kalman filters for accelerometer data.
   void _initializeKalmanFilters() {
-    print("Initializing Kalman filters");
+    ///print("Initializing Kalman filters");
     _kalmanX = SimpleKalman(
       errorMeasure: _errorMeasureAcc,
       errorEstimate: _errorMeasureAcc,
@@ -164,7 +164,7 @@ class _ParcourState extends State<Parcour>
 
   /// Processes incoming sensor data and updates jump height.
   void _processSensorData(Map<String, dynamic> data) {
-    print("Processing sensor data");
+    ///print("Processing sensor data");
     /// Kalman filtered accelerometer data for X.
     _accX = _kalmanX.filtered(data["ACC"]["X"]);
 
@@ -197,7 +197,7 @@ class _ParcourState extends State<Parcour>
   /// If the device is stationary, the velocity is reset to 0.
   /// Otherwise, it integrates the current acceleration to update velocity and height.
   void _updateHeight(double currentAcc) {
-    print("Updating height");
+    ///print("Updating height");
     if (_deviceIsStationary(0.3)) {
       _velocity = 0.0;
       _height = 0.0;
@@ -318,7 +318,7 @@ class _ParcourState extends State<Parcour>
           backgroundColor: !_isJumping ? Colors.greenAccent : Colors.red,
           foregroundColor: Colors.black,
         ),
-        child: Text(_isJumping ? 'Stop Jump' : 'Set Baseline & Start Jump'),
+        child: Text(_isJumping ? 'Stop Jump' : 'Set Baseline & Start Game'),
       ),
     );
   }

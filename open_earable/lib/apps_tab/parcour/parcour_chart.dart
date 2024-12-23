@@ -87,6 +87,32 @@ class _ParcourChartState extends State<ParcourChart> {
     List<Obstacle> obstacles = [];
     late Timer timer;
     double lastUpdateTime = 0.0;
+    bool isGameRunning = true;
+
+
+  @override
+  void initState() {
+    ///print("init von parcour_chart");
+    super.initState();
+    _data = [];
+    colors = _getColor(widget.title);
+    _minY = -25;
+    _maxY = 25;
+    _setupListeners();
+        player = Player(
+        x: 150,
+        y: 100,
+        width: 50,
+        height: 50,
+        groundLevel: 100,
+    );
+    timer = Timer.periodic(Duration(milliseconds: 16), (timer) {
+      double currentTime = timer.tick * 0.016;
+      double dt = currentTime - lastUpdateTime;
+      lastUpdateTime = currentTime;
+      updateGame(dt);
+    });
+  }
       
   /// Sets up the listeners for the data.
   void _setupListeners() {
@@ -204,29 +230,6 @@ class _ParcourChartState extends State<ParcourChart> {
     }
   }
 
-  @override
-  void initState() {
-    print("init von parcour_chart");
-    super.initState();
-    _data = [];
-    colors = _getColor(widget.title);
-    _minY = -25;
-    _maxY = 25;
-    _setupListeners();
-        player = Player(
-        x: 150,
-        y: 100,
-        width: 50,
-        height: 50,
-        groundLevel: 100,
-    );
-    timer = Timer.periodic(Duration(milliseconds: 16), (timer) {
-      double currentTime = timer.tick * 0.016;
-      double dt = currentTime - lastUpdateTime;
-      lastUpdateTime = currentTime;
-      updateGame(dt);
-    });
-  }
 
   @override
   void dispose() {
@@ -242,124 +245,167 @@ class _ParcourChartState extends State<ParcourChart> {
   }
 
   void updateGame(double dt) {
-    print("updating game");
-    print("dt: $dt");
-    setState(() {
-      player.update(dt);
-      print("Player updated");
-      for (var obstacle in obstacles) {
-        obstacle.update(dt);
-      }
-      print("Obstacles updated");
-      obstacles.removeWhere((obstacle) => obstacle.x < -obstacle.width);
-      if (obstacles.isEmpty || obstacles.last.x < 200) {
-        obstacles.add(Obstacle(
-          x: MediaQuery.of(context).size.width,
-          y: 100,
-          width: 50,
-          height: 50,
-        ),);
-      }
-      checkCollisions();
-    });
-  }
+  if (!isGameRunning) return; // Verhindere weitere Updates, wenn das Spiel gestoppt wurde
+  print("updating game");
+  setState(() {
+    player.update(dt);
+    for (var obstacle in obstacles) {
+      obstacle.update(dt);
+    }
+    obstacles.removeWhere((obstacle) => obstacle.x < -obstacle.width);
+    if (obstacles.isEmpty || obstacles.last.x < 200) {
+      obstacles.add(Obstacle(
+        x: MediaQuery.of(context).size.width,
+        y: 100,
+        width: 50,
+        height: 50,
+      ));
+    }
+    checkCollisions();
+  });
+}
 
   void checkCollisions() {
+    print("checking collisions");
     for (var obstacle in obstacles) {
       if (player.getRect().overlaps(obstacle.getRect())) {
         // Kollision erkannt, Spiel beenden oder Leben verlieren
+        print("collision detected");
         timer.cancel();
+        isGameRunning = false; // Setze die boolesche Variable auf false
+        _handleCollision();
+        break; // Verhindere weitere Überprüfungen nach einer Kollision
       }
     }
   }
 
+  void _handleCollision() {
+  // Beispiel: Zeige eine Nachricht an und setze den Spielzustand zurück
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text("Kollision erkannt!"),
+        content: Text("Das Spiel wird neu gestartet."),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _resetGame();
+            },
+            child: Text("OK"),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+void _resetGame() {
+  setState(() {
+    print("resetting game");
+    player = Player(
+      x: 150,
+      y: 100,
+      width: 50,
+      height: 50,
+      groundLevel: 100,
+    );
+    obstacles.clear();
+    lastUpdateTime = 0.0; // Setze die Zeit zurück
+    isGameRunning = true; // Setze die boolesche Variable auf true
+    timer = Timer.periodic(Duration(milliseconds: 16), (timer) {
+      double currentTime = timer.tick * 0.016;
+      double dt = currentTime - lastUpdateTime;
+      lastUpdateTime = currentTime;
+      updateGame(dt);
+    });
+  });
+}
+
   @override
   Widget build(BuildContext context) {
-    if (widget.title == "Height Data") {
-      seriesList = [
-        charts.Series<DataValue, int>(
-          id: 'Height (m)',
-          colorFn: (_, __) => charts.Color.fromHex(code: colors[0]),
-          domainFn: (DataValue data, _) => data._timestamp,
-          measureFn: (DataValue data, _) => (data as Jump)._height,
-          data: _data,
-        ),
-      ];
-    } else if (widget.title == "Parcour") {
-      print("parcour chart building");
+  if (widget.title == "Height Data") {
+    seriesList = [
+      charts.Series<DataValue, int>(
+        id: 'Height (m)',
+        colorFn: (_, __) => charts.Color.fromHex(code: colors[0]),
+        domainFn: (DataValue data, _) => data._timestamp,
+        measureFn: (DataValue data, _) => (data as Jump)._height,
+        data: _data,
+      ),
+    ];
+  } else if (widget.title == "Parcour") {
+    print("parcour chart building");
+    if (isGameRunning) {
       double currentTime = DateTime.now().millisecondsSinceEpoch / 1000.0;
       double dt = currentTime - lastUpdateTime;
       lastUpdateTime = currentTime;
       updateGame(dt);
-      return GestureDetector(
-        onTap: () {
-          player.jump();
-        },
-        child: Column(
-          children: [
-            Expanded(
-              child: CustomPaint(
+    }
+    return GestureDetector(
+      onTap: () {
+        player.jump();
+      },
+      child: Column(
+        children: [
+          Expanded(
+            child: CustomPaint(
               painter: ParcourPainter(player: player, obstacles: obstacles),
               child: Container(),
+            ),
+          ),
+        ],
+      ),
+    );
+  } else {
+    throw ArgumentError("Invalid tab title.");
+  }
+
+  return Column(
+    children: [
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+      ),
+      Expanded(
+        child: charts.LineChart(
+          seriesList,
+          animate: false,
+          behaviors: [
+            charts.SeriesLegend(
+              position: charts.BehaviorPosition.bottom,
+              outsideJustification: charts.OutsideJustification.middleDrawArea,
+              horizontalFirst: false,
+              desiredMaxRows: 1,
+              entryTextStyle: charts.TextStyleSpec(
+                color: charts.Color(r: 255, g: 255, b: 255),
+                fontSize: 12,
               ),
             ),
           ],
-        ),
-      );
-    } else {
-      throw ArgumentError("Invalid tab title.");
-    }
-
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-        ),
-        Expanded(
-          child: charts.LineChart(
-            seriesList,
-            animate: false,
-            behaviors: [
-              charts.SeriesLegend(
-                position: charts.BehaviorPosition.bottom,
-                // To position the legend at the end (bottom). You can change this as per requirement.
-                outsideJustification:
-                    charts.OutsideJustification.middleDrawArea,
-                // To justify the position.
-                horizontalFirst: false,
-                // To stack items horizontally.
-                desiredMaxRows: 1,
-                // Optional if you want to define max rows for the legend.
-                entryTextStyle: charts.TextStyleSpec(
-                  // Optional styling for the text.
-                  color: charts.Color(r: 255, g: 255, b: 255),
-                  fontSize: 12,
-                ),
+          primaryMeasureAxis: charts.NumericAxisSpec(
+            renderSpec: charts.GridlineRendererSpec(
+              labelStyle: charts.TextStyleSpec(
+                fontSize: 14,
+                color: charts.MaterialPalette.white,
               ),
-            ],
-            primaryMeasureAxis: charts.NumericAxisSpec(
-              renderSpec: charts.GridlineRendererSpec(
-                labelStyle: charts.TextStyleSpec(
-                  fontSize: 14,
-                  color: charts.MaterialPalette.white, // Set the color here
-                ),
-              ),
-              viewport: charts.NumericExtents(_minY, _maxY),
             ),
-            domainAxis: charts.NumericAxisSpec(
-              renderSpec: charts.GridlineRendererSpec(
-                labelStyle: charts.TextStyleSpec(
-                  fontSize: 14,
-                  color: charts.MaterialPalette.white, // Set the color here
-                ),
+            viewport: charts.NumericExtents(_minY, _maxY),
+          ),
+          domainAxis: charts.NumericAxisSpec(
+            renderSpec: charts.GridlineRendererSpec(
+              labelStyle: charts.TextStyleSpec(
+                fontSize: 14,
+                color: charts.MaterialPalette.white,
               ),
-              viewport: charts.NumericExtents(_minX, _maxX),
             ),
+            viewport: charts.NumericExtents(_minX, _maxX),
           ),
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
 }
 
 /// A class representing a generic data value.
@@ -479,9 +525,7 @@ class Player {
         y = groundLevel - targetHeight;
         isJumping = false;
       }
-      print('Current player height: $y'); // Debug-Ausgabe der aktuellen Höhe
     } else {
-      print("player is not jumping");
       if (y < groundLevel) {
         y += (targetHeight) * dt; // Bewege den Spieler zurück zum Boden
         if (y > groundLevel) {
@@ -489,7 +533,6 @@ class Player {
         }
       }
     }
-    print("position: $x, $y");
   }
 
   void jump() {
@@ -522,7 +565,6 @@ class Obstacle {
 
   void update(double dt) {
     x -= speed * dt;
-    print("new obstacle position: $x, $y");
   }
 
   Rect getRect() {
@@ -540,7 +582,7 @@ class ParcourPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // 0-Linie zeichnen
-    print("painting");
+    ///print("painting");
     final zeroLinePaint = Paint()..color = Colors.black;
     canvas.drawLine(Offset(0, size.height / 2), Offset(size.width, size.height / 2), zeroLinePaint);
 
@@ -564,13 +606,11 @@ class ParcourPainter extends CustomPainter {
         // Spieler zeichnen
     final playerPaint = Paint()..color = Colors.yellow;
     canvas.drawRect(player.getRect(), playerPaint);
-    print('Player: ${player.getRect()}'); // Debug-Ausgabe
 
     // Hindernisse zeichnen
     final obstaclePaint = Paint()..color = Colors.red;
     for (var obstacle in obstacles) {
       canvas.drawRect(obstacle.getRect(), obstaclePaint);
-      print('Obstacle: ${obstacle.getRect()}'); // Debug-Ausgabe
     }
 
     // Horizontale Skala auf der x-Achse zeichnen
@@ -588,7 +628,6 @@ class ParcourPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    print("we should repaint");
     return true;
   }
 }
