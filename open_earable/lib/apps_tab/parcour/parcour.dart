@@ -25,6 +25,7 @@ class GameState {
   bool isGameRunning = false;
   double lastUpdateTime = 0.0;
   double currentTime = 0.0;
+  int obstaclesOvercome = 0;
 
   void initializeTimer() {
     timer = Timer.periodic(Duration(milliseconds: 16), (timer) {
@@ -328,12 +329,8 @@ class _ParcourState extends State<Parcour>
     return Column(
       children: [
         Text(
-          'Actual height: ${_height.toStringAsFixed(2)} m',
+          'Obstacles overcome: ${gameState.obstaclesOvercome}',
           style: Theme.of(context).textTheme.headlineMedium,
-        ),
-        Text(
-          'Jump time: ${_prettyDuration(_jumpDuration)}',
-          style: Theme.of(context).textTheme.headlineSmall,
         ),
       ],
     );

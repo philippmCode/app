@@ -83,12 +83,9 @@ class _ParcourChartState extends State<ParcourChart> {
   /// The height of the jump.
   double _height = 0.0;
 
-  /// Flag to indicate if the height is over 10 cm.
-  bool _isHeightOverThreshold = false;
-
-    late Player player;
-    List<Obstacle> obstacles = [];
-    double lastUpdateTime = 0.0;
+  late Player player;
+  List<Obstacle> obstacles = [];
+  double lastUpdateTime = 0.0;
 
 
   @override
@@ -212,7 +209,6 @@ class _ParcourChartState extends State<ParcourChart> {
       _maxX = value._timestamp;
       _minX = _data[0]._timestamp;
 
-      _isHeightOverThreshold = _height > 0.1;
     });
   }
 
@@ -244,13 +240,25 @@ class _ParcourChartState extends State<ParcourChart> {
     }
   }
 
+  void updateObstacle(Obstacle obstacle, double dt) {        
+  // Zähle die Hindernisse, die entfernt werden
+    obstacle.update(dt);
+    obstacles.removeWhere((obstacle) {
+    if (obstacle.x < -obstacle.width) {
+      widget.gameState.obstaclesOvercome++;  // Zähler erhöhen
+      return true;  // Hindernis entfernen
+    }
+    return false;
+  });
+}
+
   void updateGame(double dt) {
   if (!widget.gameState.isGameRunning) return; // Verhindere weitere Updates, wenn das Spiel gestoppt wurde
   ///print("updating game");
   setState(() {
     player.update(dt);
     for (var obstacle in obstacles) {
-      obstacle.update(dt);
+      updateObstacle(obstacle, dt);
       ///print("obstacle x: ${obstacle.x}");
     }
     obstacles.removeWhere((obstacle) => obstacle.x < -obstacle.width);
