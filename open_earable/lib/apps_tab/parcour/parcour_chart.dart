@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:open_earable/apps_tab/parcour/parcour.dart';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:community_charts_flutter/community_charts_flutter.dart'
@@ -13,12 +14,13 @@ import 'dart:core';
 class ParcourChart extends StatefulWidget {
   /// The OpenEarable object.
   final OpenEarable openEarable;
+  final GameState gameState;
 
   /// The title of the chart.
   final String title;
 
   /// Constructs a JumpHeightChart object with an OpenEarable object and a title.
-  const ParcourChart(this.openEarable, this.title, {super.key});
+  const ParcourChart(this.gameState, this.openEarable, this.title, {super.key});
 
   @override
   State<ParcourChart> createState() => _ParcourChartState();
@@ -85,9 +87,7 @@ class _ParcourChartState extends State<ParcourChart> {
 
     late Player player;
     List<Obstacle> obstacles = [];
-    late Timer timer;
     double lastUpdateTime = 0.0;
-    bool isGameRunning = true;
 
 
   @override
@@ -106,12 +106,6 @@ class _ParcourChartState extends State<ParcourChart> {
         height: 50,
         groundLevel: 100,
     );
-    timer = Timer.periodic(Duration(milliseconds: 16), (timer) {
-      double currentTime = timer.tick * 0.016;
-      double dt = currentTime - lastUpdateTime;
-      lastUpdateTime = currentTime;
-      updateGame(dt);
-    });
   }
       
   /// Sets up the listeners for the data.
@@ -245,15 +239,17 @@ class _ParcourChartState extends State<ParcourChart> {
   }
 
   void updateGame(double dt) {
-  if (!isGameRunning) return; // Verhindere weitere Updates, wenn das Spiel gestoppt wurde
+  if (!widget.gameState.isGameRunning) return; // Verhindere weitere Updates, wenn das Spiel gestoppt wurde
   print("updating game");
   setState(() {
     player.update(dt);
     for (var obstacle in obstacles) {
       obstacle.update(dt);
+      print("obstacle x: ${obstacle.x}");
     }
     obstacles.removeWhere((obstacle) => obstacle.x < -obstacle.width);
     if (obstacles.isEmpty || obstacles.last.x < 200) {
+      print("adding obstacle");
       obstacles.add(Obstacle(
         x: MediaQuery.of(context).size.width,
         y: 100,
@@ -271,8 +267,7 @@ class _ParcourChartState extends State<ParcourChart> {
       if (player.getRect().overlaps(obstacle.getRect())) {
         // Kollision erkannt, Spiel beenden oder Leben verlieren
         print("collision detected");
-        timer.cancel();
-        isGameRunning = false; // Setze die boolesche Variable auf false
+        widget.gameState.stopGame(); // Stoppe das Spiel
         _handleCollision();
         break; // Verhindere weitere Überprüfungen nach einer Kollision
       }
@@ -312,14 +307,8 @@ void _resetGame() {
       groundLevel: 100,
     );
     obstacles.clear();
-    lastUpdateTime = 0.0; // Setze die Zeit zurück
-    isGameRunning = true; // Setze die boolesche Variable auf true
-    timer = Timer.periodic(Duration(milliseconds: 16), (timer) {
-      double currentTime = timer.tick * 0.016;
-      double dt = currentTime - lastUpdateTime;
-      lastUpdateTime = currentTime;
-      updateGame(dt);
-    });
+    widget.gameState.lastUpdateTime = 0.0; // Setze die Zeit zurück
+    widget.gameState.startGame(); // Starte das Spiel erneut
   });
 }
 
@@ -337,10 +326,12 @@ void _resetGame() {
     ];
   } else if (widget.title == "Parcour") {
     print("parcour chart building");
-    if (isGameRunning) {
-      double currentTime = DateTime.now().millisecondsSinceEpoch / 1000.0;
-      double dt = currentTime - lastUpdateTime;
-      lastUpdateTime = currentTime;
+    if (widget.gameState.isGameRunning) {
+      double timeNow = widget.gameState.currentTime;
+      print("currentTime: $timeNow" "lastUpdateTime: ${widget.gameState.lastUpdateTime}");  
+      double dt = timeNow - widget.gameState.lastUpdateTime;
+      widget.gameState.lastUpdateTime = timeNow;
+      print("dt: $dt");
       updateGame(dt);
     }
     return GestureDetector(
@@ -565,6 +556,7 @@ class Obstacle {
 
   void update(double dt) {
     x -= speed * dt;
+    print("obstacle x: $x");
   }
 
   Rect getRect() {
@@ -582,7 +574,7 @@ class ParcourPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // 0-Linie zeichnen
-    ///print("painting");
+    print("painting");
     final zeroLinePaint = Paint()..color = Colors.black;
     canvas.drawLine(Offset(0, size.height / 2), Offset(size.width, size.height / 2), zeroLinePaint);
 
@@ -603,13 +595,14 @@ class ParcourPainter extends CustomPainter {
       textPainter.paint(canvas, Offset(15, i - 6));
     }
 
-        // Spieler zeichnen
+    // Spieler zeichnen
     final playerPaint = Paint()..color = Colors.yellow;
     canvas.drawRect(player.getRect(), playerPaint);
 
     // Hindernisse zeichnen
     final obstaclePaint = Paint()..color = Colors.red;
     for (var obstacle in obstacles) {
+      print("obstacle x: ${obstacle.x}");
       canvas.drawRect(obstacle.getRect(), obstaclePaint);
     }
 

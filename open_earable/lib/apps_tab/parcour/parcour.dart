@@ -19,9 +19,40 @@ class Parcour extends StatefulWidget {
   State<Parcour> createState() => _ParcourState();
 }
 
+class GameState {
+
+  late Timer timer;
+  bool isGameRunning = false;
+  double lastUpdateTime = 0.0;
+  double currentTime = 0.0;
+
+  void initializeTimer() {
+    timer = Timer.periodic(Duration(milliseconds: 16), (timer) {
+      currentTime = timer.tick * 0.016;
+    });
+    print("lastUpdateTime: $lastUpdateTime");
+    print("Game State Time: $currentTime");
+  }
+
+  void startGame() {
+    print("starten das Game");
+    isGameRunning = true;
+    print("lastUpdateTime: $lastUpdateTime");
+    print("Game State Timer: $timer");
+  }
+
+  void stopGame() {
+    isGameRunning = false;
+    timer.cancel();
+  }
+}
+
 /// State class for JumpHeightTest widget.
 class _ParcourState extends State<Parcour>
     with SingleTickerProviderStateMixin {
+  /// Manages the game state.
+  final GameState gameState = GameState();
+
   /// Stores the start time of a jump test.
   DateTime? _startOfJump;
 
@@ -121,6 +152,8 @@ class _ParcourState extends State<Parcour>
   void _startJump() {
     print("Starting jump");
     _startOfJump = DateTime.now();
+    gameState.initializeTimer();
+    gameState.startGame();
 
     setState(() {
       // Clear data from previous jump.
@@ -138,6 +171,7 @@ class _ParcourState extends State<Parcour>
     if (_isJumping) {
       setState(() {
         _isJumping = false;
+        gameState.stopGame();
       });
     }
   }
@@ -284,8 +318,8 @@ class _ParcourState extends State<Parcour>
     return TabBarView(
       controller: _tabController,
       children: [
-        ParcourChart(widget.openEarable, "Parcour"),
-        ParcourChart(widget.openEarable, "Height Data"),
+        ParcourChart(gameState, widget.openEarable, "Parcour"),
+        ParcourChart(gameState, widget.openEarable, "Height Data"),
       ],
     );
   }
