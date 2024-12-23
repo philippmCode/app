@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:open_earable/apps_tab/parcour/parcour.dart';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
@@ -99,7 +100,7 @@ class _ParcourChartState extends State<ParcourChart> {
     _minY = -25;
     _maxY = 25;
     _setupListeners();
-        player = Player(
+      player = Player(
         x: 150,
         y: 100,
         width: 50,
@@ -181,6 +182,11 @@ class _ParcourChartState extends State<ParcourChart> {
     }
     // Prevent height from going negative.
     _height = max(0, _height);
+    print("Height: $_height");
+    if (_height > 0.1) {
+      print("Height: $_height");
+      player.jump();
+    }
 
     return Jump(
       DateTime.fromMillisecondsSinceEpoch(accValue._timestamp),
@@ -240,21 +246,23 @@ class _ParcourChartState extends State<ParcourChart> {
 
   void updateGame(double dt) {
   if (!widget.gameState.isGameRunning) return; // Verhindere weitere Updates, wenn das Spiel gestoppt wurde
-  print("updating game");
+  ///print("updating game");
   setState(() {
     player.update(dt);
     for (var obstacle in obstacles) {
       obstacle.update(dt);
-      print("obstacle x: ${obstacle.x}");
+      ///print("obstacle x: ${obstacle.x}");
     }
     obstacles.removeWhere((obstacle) => obstacle.x < -obstacle.width);
+    double placeSpeed = 200.0;
     if (obstacles.isEmpty || obstacles.last.x < 200) {
-      print("adding obstacle");
+      placeSpeed += 50.0;
       obstacles.add(Obstacle(
         x: MediaQuery.of(context).size.width,
         y: 100,
         width: 50,
         height: 50,
+        speed: placeSpeed,
       ));
     }
     checkCollisions();
@@ -325,19 +333,16 @@ void _resetGame() {
       ),
     ];
   } else if (widget.title == "Parcour") {
-    print("parcour chart building");
+    ///print("parcour chart building");
     if (widget.gameState.isGameRunning) {
       double timeNow = widget.gameState.currentTime;
-      print("currentTime: $timeNow" "lastUpdateTime: ${widget.gameState.lastUpdateTime}");  
+      //print("currentTime: $timeNow" "lastUpdateTime: ${widget.gameState.lastUpdateTime}");  
       double dt = timeNow - widget.gameState.lastUpdateTime;
       widget.gameState.lastUpdateTime = timeNow;
-      print("dt: $dt");
+      ///print("dt: $dt");
       updateGame(dt);
     }
-    return GestureDetector(
-      onTap: () {
-        player.jump();
-      },
+    return Container(
       child: Column(
         children: [
           Expanded(
@@ -551,12 +556,12 @@ class Obstacle {
     required this.y,
     required this.width,
     required this.height,
-    this.speed = 200.0,
+    required this.speed,
   });
 
   void update(double dt) {
     x -= speed * dt;
-    print("obstacle x: $x");
+    ///print("obstacle x: $x");
   }
 
   Rect getRect() {
@@ -574,7 +579,7 @@ class ParcourPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // 0-Linie zeichnen
-    print("painting");
+    ///print("painting");
     final zeroLinePaint = Paint()..color = Colors.black;
     canvas.drawLine(Offset(0, size.height / 2), Offset(size.width, size.height / 2), zeroLinePaint);
 
@@ -602,7 +607,7 @@ class ParcourPainter extends CustomPainter {
     // Hindernisse zeichnen
     final obstaclePaint = Paint()..color = Colors.red;
     for (var obstacle in obstacles) {
-      print("obstacle x: ${obstacle.x}");
+      ///print("obstacle x: ${obstacle.x}");
       canvas.drawRect(obstacle.getRect(), obstaclePaint);
     }
 
