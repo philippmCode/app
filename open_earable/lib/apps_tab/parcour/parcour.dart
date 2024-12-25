@@ -16,7 +16,7 @@ class Parcour extends StatefulWidget {
 
   /// Creates a state for JumpHeightTest widget.
   @override
-  State<Parcour> createState() => _ParcourState();
+  State<Parcour> createState() => ParcourState();
 }
 
 class GameState {
@@ -28,6 +28,8 @@ class GameState {
   int obstaclesOvercome = 0;
 
   void initializeTimer() {
+    lastUpdateTime = 0.0;
+    currentTime = 0.0;
     timer = Timer.periodic(Duration(milliseconds: 16), (timer) {
       currentTime = timer.tick * 0.016;
     });
@@ -39,17 +41,21 @@ class GameState {
     print("starten das Game");
     isGameRunning = true;
     print("lastUpdateTime: $lastUpdateTime");
-    print("Game State Timer: $timer");
+  }
+
+  double getCurrentTime() {
+    return DateTime.now().millisecondsSinceEpoch / 1000.0;
   }
 
   void stopGame() {
+    obstaclesOvercome = 0;
     isGameRunning = false;
     timer.cancel();
   }
 }
 
 /// State class for JumpHeightTest widget.
-class _ParcourState extends State<Parcour>
+class ParcourState extends State<Parcour>
     with SingleTickerProviderStateMixin {
   /// Manages the game state.
   final GameState gameState = GameState();
@@ -162,8 +168,10 @@ class _ParcourState extends State<Parcour>
   }
 
   /// Stops the jump height measurement process.
-  void _stopJump() {
+  void stopJump() {
+    print("Stopping jump");
     if (_isJumping) {
+      gameState.stopGame();
       setState(() {
         _isJumping = false;
         gameState.stopGame();
@@ -309,8 +317,8 @@ class _ParcourState extends State<Parcour>
     return TabBarView(
       controller: _tabController,
       children: [
-        ParcourChart(gameState, widget.openEarable, "Parcour"),
-        ParcourChart(gameState, widget.openEarable, "Height Data"),
+        ParcourChart(this, gameState, widget.openEarable, "Parcour"),
+        ParcourChart(this, gameState, widget.openEarable, "Height Data"),
       ],
     );
   }
@@ -332,7 +340,7 @@ class _ParcourState extends State<Parcour>
       child: ElevatedButton(
         onPressed: _earableConnected
             ? () {
-                _isJumping ? _stopJump() : _startJump();
+                _isJumping ? stopJump() : _startJump();
               }
             : null,
         style: ElevatedButton.styleFrom(

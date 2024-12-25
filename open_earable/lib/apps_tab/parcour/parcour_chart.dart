@@ -15,12 +15,13 @@ class ParcourChart extends StatefulWidget {
   /// The OpenEarable object.
   final OpenEarable openEarable;
   final GameState gameState;
+  final ParcourState parcourState;
 
   /// The title of the chart.
   final String title;
 
   /// Constructs a JumpHeightChart object with an OpenEarable object and a title.
-  const ParcourChart(this.gameState, this.openEarable, this.title, {super.key});
+  const ParcourChart(this.parcourState, this.gameState, this.openEarable, this.title, {super.key});
 
   @override
   State<ParcourChart> createState() => _ParcourChartState();
@@ -85,7 +86,6 @@ class _ParcourChartState extends State<ParcourChart> {
   late Player player;
   List<Obstacle> obstacles = [];
   double lastUpdateTime = 0.0;
-
 
   @override
   void initState() {
@@ -178,9 +178,9 @@ class _ParcourChartState extends State<ParcourChart> {
     }
     // Prevent height from going negative.
     _height = max(0, _height);
-    print("Height: $_height");
+    ///print("Height: $_height");
     if (_height > 0.1) {
-      print("Height: $_height");
+      ///print("Height: $_height");
       player.jump();
     }
 
@@ -239,28 +239,22 @@ class _ParcourChartState extends State<ParcourChart> {
     }
   }
 
-  void updateObstacle(Obstacle obstacle, double dt) {        
-  // Zähle die Hindernisse, die entfernt werden
-    obstacle.update(dt);
-    obstacles.removeWhere((obstacle) {
-    if (obstacle.x < -obstacle.width) {
-      widget.gameState.obstaclesOvercome++;  // Zähler erhöhen
-      return true;  // Hindernis entfernen
-    }
-    return false;
-  });
-}
-
   void updateGame(double dt) {
   if (!widget.gameState.isGameRunning) return; // Verhindere weitere Updates, wenn das Spiel gestoppt wurde
   ///print("updating game");
   setState(() {
     player.update(dt);
+    List<Obstacle> obstaclesToRemove = []; // Liste der zu entfernenden Hindernisse
     for (var obstacle in obstacles) {
-      updateObstacle(obstacle, dt);
-      ///print("obstacle x: ${obstacle.x}");
+      obstacle.update(dt);
+      print("obstacle x: ${obstacle.x}");
+      if (obstacle.x < -obstacle.width) {
+        obstaclesToRemove.add(obstacle); // Füge das Hindernis zur Liste der zu entfernenden Hindernisse hinzu
+        widget.gameState.obstaclesOvercome++; // Erhöhe den Zähler
+      }
     }
-    obstacles.removeWhere((obstacle) => obstacle.x < -obstacle.width);
+    // Entferne die Hindernisse nach der Iteration
+    obstacles.removeWhere((obstacle) => obstaclesToRemove.contains(obstacle));
     double placeSpeed = 200.0;
     if (obstacles.isEmpty || obstacles.last.x < 200) {
       placeSpeed += 50.0;
@@ -277,12 +271,14 @@ class _ParcourChartState extends State<ParcourChart> {
 }
 
   void checkCollisions() {
-    print("checking collisions");
+    ///print("checking collisions");
     for (var obstacle in obstacles) {
       if (player.getRect().overlaps(obstacle.getRect())) {
         // Kollision erkannt, Spiel beenden oder Leben verlieren
         print("collision detected");
-        widget.gameState.stopGame(); // Stoppe das Spiel
+        widget.parcourState.stopJump();
+        widget.gameState.lastUpdateTime = 0.0; // Setze die Zeit zurück
+        obstacles.clear(); // Entferne alle Hindernisse
         _handleCollision();
         break; // Verhindere weitere Überprüfungen nach einer Kollision
       }
@@ -321,8 +317,6 @@ void _resetGame() {
       height: 50,
       groundLevel: 100,
     );
-    obstacles.clear();
-    widget.gameState.lastUpdateTime = 0.0; // Setze die Zeit zurück
     widget.gameState.startGame(); // Starte das Spiel erneut
   });
 }
@@ -343,10 +337,11 @@ void _resetGame() {
     ///print("parcour chart building");
     if (widget.gameState.isGameRunning) {
       double timeNow = widget.gameState.currentTime;
+      print("timeNow: $timeNow");
       //print("currentTime: $timeNow" "lastUpdateTime: ${widget.gameState.lastUpdateTime}");  
       double dt = timeNow - widget.gameState.lastUpdateTime;
       widget.gameState.lastUpdateTime = timeNow;
-      ///print("dt: $dt");
+      print("dt setzen: $dt");
       updateGame(dt);
     }
     return Container(
@@ -538,7 +533,7 @@ class Player {
     if (!isJumping) {
       isJumping = true;
       targetHeight = 3 * height;
-      print('Jump initiated to height: $targetHeight'); // Debug-Ausgabe der Sprunggeschwindigkeit
+      ///print('Jump initiated to height: $targetHeight'); // Debug-Ausgabe der Sprunggeschwindigkeit
     }
   }
 
@@ -559,12 +554,12 @@ class Obstacle {
     required this.y,
     required this.width,
     required this.height,
-    required this.speed,
+    this.speed = 200.0,
   });
 
   void update(double dt) {
     x -= speed * dt;
-    ///print("obstacle x: $x");
+    print("Obstacle updated: x = $x, speed = $speed, dt = $dt"); // Debug-Ausgabe
   }
 
   Rect getRect() {
