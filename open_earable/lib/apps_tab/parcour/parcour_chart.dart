@@ -10,9 +10,9 @@ import 'package:collection/collection.dart';
 import 'dart:math';
 import 'dart:core';
 
-/// A class representing a Chart for Jump Height.
+/// class representing the ParcourChart
 class ParcourChart extends StatefulWidget {
-  /// The OpenEarable object.
+
   final OpenEarable openEarable;
   final GameState gameState;
   final ParcourState parcourState;
@@ -20,14 +20,14 @@ class ParcourChart extends StatefulWidget {
   /// The title of the chart.
   final String title;
 
-  /// Constructs a JumpHeightChart object with an OpenEarable object and a title.
+  /// Constructs a ParcourChart object with a title, openEarable, gameState, and parcourState.
   const ParcourChart(this.parcourState, this.gameState, this.openEarable, this.title, {super.key});
 
   @override
   State<ParcourChart> createState() => _ParcourChartState();
 }
 
-/// A class representing the state of a JumpHeightChart.
+/// A class representing the state of a ParcourChart.
 class _ParcourChartState extends State<ParcourChart> {
   /// The data of the chart.
   late List<DataValue> _data;
@@ -178,9 +178,8 @@ class _ParcourChartState extends State<ParcourChart> {
     }
     // Prevent height from going negative.
     _height = max(0, _height);
-    ///print("Height: $_height");
+
     if (_height > 0.1) {
-      ///print("Height: $_height");
       player.jump();
     }
 
@@ -232,7 +231,7 @@ class _ParcourChartState extends State<ParcourChart> {
     _dataSubscription?.cancel();
   }
 
-  /// Checks the length of the data an removes the oldest data if it is too long.
+  /// Checks the length of the data and removes the oldest data if it is too long.
   void _checkLength(data) {
     if (data.length > _numDatapoints) {
       data.removeRange(0, data.length - _numDatapoints);
@@ -240,20 +239,20 @@ class _ParcourChartState extends State<ParcourChart> {
   }
 
   void updateGame(double dt) {
-  if (!widget.gameState.isGameRunning) return; // Verhindere weitere Updates, wenn das Spiel gestoppt wurde
+  if (!widget.gameState.isGameRunning) return; // Prevent further updates if game not active
   ///print("updating game");
   setState(() {
     player.update(dt);
-    List<Obstacle> obstaclesToRemove = []; // Liste der zu entfernenden Hindernisse
+    List<Obstacle> obstaclesToRemove = []; // list of the obstacles that are to be removed
     for (var obstacle in obstacles) {
       obstacle.update(dt);
       print("obstacle x: ${obstacle.x}");
       if (obstacle.x < -obstacle.width) {
-        obstaclesToRemove.add(obstacle); // Füge das Hindernis zur Liste der zu entfernenden Hindernisse hinzu
-        widget.gameState.obstaclesOvercome++; // Erhöhe den Zähler
+        obstaclesToRemove.add(obstacle); // add the obstacle to the list of obstacles to be removed
+        widget.gameState.obstaclesOvercome++; // increase the number of obstacles overcome
       }
     }
-    // Entferne die Hindernisse nach der Iteration
+    // remove that are no longer visible on the screen
     obstacles.removeWhere((obstacle) => obstaclesToRemove.contains(obstacle));
     double placeSpeed = 200.0;
     if (obstacles.isEmpty || obstacles.last.x < 200) {
@@ -274,13 +273,13 @@ class _ParcourChartState extends State<ParcourChart> {
     ///print("checking collisions");
     for (var obstacle in obstacles) {
       if (player.getRect().overlaps(obstacle.getRect())) {
-        // Kollision erkannt, Spiel beenden oder Leben verlieren
+ 
         print("collision detected");
-        widget.parcourState.stopJump();
-        widget.gameState.lastUpdateTime = 0.0; // Setze die Zeit zurück
-        obstacles.clear(); // Entferne alle Hindernisse
+        widget.parcourState.stopGame();
+        widget.gameState.lastUpdateTime = 0.0; // set the time back
+        obstacles.clear(); // clear the obstacles
         _handleCollision();
-        break; // Verhindere weitere Überprüfungen nach einer Kollision
+        break; // break the loop
       }
     }
   }
@@ -317,7 +316,7 @@ void _resetGame() {
       height: 50,
       groundLevel: 100,
     );
-    widget.gameState.startGame(); // Starte das Spiel erneut
+    widget.gameState.startGameState(); // restart the game
   });
 }
 
@@ -460,6 +459,7 @@ class XYZValue extends DataValue {
 
 /// A class representing a jump with a time and height.
 class Jump extends DataValue {
+  
   /// The time of the jump.
   final DateTime _time;
 
@@ -514,14 +514,14 @@ class Player {
 
   void update(double dt) {
     if (isJumping) {
-      y -= (targetHeight) * dt; // Bewege den Spieler zur Zielhöhe
+      y -= (targetHeight) * dt; // move player towards target height
       if (y <= groundLevel - targetHeight) {
         y = groundLevel - targetHeight;
         isJumping = false;
       }
     } else {
       if (y < groundLevel) {
-        y += (targetHeight) * dt; // Bewege den Spieler zurück zum Boden
+        y += (targetHeight) * dt; // move player back towards the ground
         if (y > groundLevel) {
           y = groundLevel;
         }
@@ -581,7 +581,7 @@ class ParcourPainter extends CustomPainter {
     final zeroLinePaint = Paint()..color = Colors.black;
     canvas.drawLine(Offset(0, size.height / 2), Offset(size.width, size.height / 2), zeroLinePaint);
 
-    // Vertikale Linie mit Höhenmarkierungen zeichnen
+    // vertical scale with 50px steps
     final verticalLinePaint = Paint()..color = Colors.blue;
     final textPainter = TextPainter(
       textAlign: TextAlign.left,
@@ -598,18 +598,18 @@ class ParcourPainter extends CustomPainter {
       textPainter.paint(canvas, Offset(15, i - 6));
     }
 
-    // Spieler zeichnen
+    // draw player
     final playerPaint = Paint()..color = Colors.yellow;
     canvas.drawRect(player.getRect(), playerPaint);
 
-    // Hindernisse zeichnen
+    // draw obstacles
     final obstaclePaint = Paint()..color = Colors.red;
     for (var obstacle in obstacles) {
       ///print("obstacle x: ${obstacle.x}");
       canvas.drawRect(obstacle.getRect(), obstaclePaint);
     }
 
-    // Horizontale Skala auf der x-Achse zeichnen
+    // horizontal scale on x axis with 50px steps
     final horizontalLinePaint = Paint()..color = Colors.green;
     for (double i = 0; i <= size.width; i += 50) {
       canvas.drawLine(Offset(i, player.groundLevel - 10), Offset(i, player.groundLevel + 10), horizontalLinePaint);

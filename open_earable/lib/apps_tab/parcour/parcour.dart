@@ -6,15 +6,15 @@ import 'package:simple_kalman/simple_kalman.dart';
 import 'dart:math';
 import 'package:open_earable/shared/earable_not_connected_warning.dart';
 
-/// An app that lets you test your jump height using an OpenEarable device.
+/// A game where you steer the player using the OpenEarable device.
 class Parcour extends StatefulWidget {
   /// Instance of OpenEarable device.
   final OpenEarable openEarable;
 
-  /// Constructs a JumpHeightTest widget with a given OpenEarable device.
+  /// Constructs a Parcour instance widget with a given OpenEarable device.
   const Parcour(this.openEarable, {super.key});
 
-  /// Creates a state for JumpHeightTest widget.
+  /// state for the Parcour widget.
   @override
   State<Parcour> createState() => ParcourState();
 }
@@ -37,7 +37,7 @@ class GameState {
     print("Game State Time: $currentTime");
   }
 
-  void startGame() {
+  void startGameState() {
     print("starten das Game");
     isGameRunning = true;
     print("lastUpdateTime: $lastUpdateTime");
@@ -47,31 +47,26 @@ class GameState {
     return DateTime.now().millisecondsSinceEpoch / 1000.0;
   }
 
-  void stopGame() {
+  void stopGameState() {
     obstaclesOvercome = 0;
     isGameRunning = false;
     timer.cancel();
   }
 }
 
-/// State class for JumpHeightTest widget.
+/// State class for Parcour widget.
 class ParcourState extends State<Parcour>
     with SingleTickerProviderStateMixin {
   /// Manages the game state.
   final GameState gameState = GameState();
 
-
-
   /// Current height calculated from sensor data.
-  double _height = 0.0;
+  double _currentHeight = 0.0;
 
-  // List to store each jump's data.
-  final List<Jump> _jumpData = [];
+  // if the game has started and is active
+  bool _gameActive = false;
 
-  // Flag to indicate if jump measurement is ongoing.
-  bool _isJumping = false;
-
-  /// Flag to indicate if an OpenEarable device is connected.
+  /// Flag to check if an OpenEarable device is connected.
   bool _earableConnected = false;
 
   /// Subscription to IMU sensor data.
@@ -138,8 +133,8 @@ class ParcourState extends State<Parcour>
     _imuSubscription = widget.openEarable.sensorManager
         .subscribeToSensorData(0)
         .listen((data) {
-      // Only process sensor data if jump measurement is ongoing.
-      if (!_isJumping) {
+      // Only process sensor data if the game is ongoing.
+      if (!_gameActive) {
         return;
       }
       setState(() {
@@ -151,30 +146,28 @@ class ParcourState extends State<Parcour>
 
   /// Starts the jump height measurement process.
   /// It sets the sampling rate, initializes or resets variables, and begins listening to sensor data.
-  void _startJump() {
+  void _startGame() {
     print("Starting jump");
+
     gameState.initializeTimer();
-    gameState.startGame();
+    gameState.startGameState();
 
     setState(() {
       // Clear data from previous jump.
-      _jumpData.clear();
-      _isJumping = true;
-      _height = 0.0;
+      _gameActive = true;
+      _currentHeight = 0.0;
       _velocity = 0.0;
-      // Reset max height on starting a new jump
-      _maxHeight = 0.0;
     });
   }
 
-  /// Stops the jump height measurement process.
-  void stopJump() {
-    print("Stopping jump");
-    if (_isJumping) {
-      gameState.stopGame();
+  /// Ends the game
+  void stopGame() {
+    print("Stopping game");
+    if (_gameActive) {
+      gameState.stopGameState();
       setState(() {
-        _isJumping = false;
-        gameState.stopGame();
+        _gameActive = false;
+        gameState.stopGameState();
       });
     }
   }
@@ -213,7 +206,8 @@ class ParcourState extends State<Parcour>
 
     /// Pitch angle in radians.
     _pitch = data["EULER"]["PITCH"];
-    // Calculates the current vertical acceleration.
+
+    // current vertical acceleration.
     // It adjusts the Z-axis acceleration with the pitch angle to account for the device's orientation.
     double currentAcc = _accZ * cos(_pitch) + _accX * sin(_pitch);
     // Subtract gravity to get acceleration due to movement.
@@ -237,32 +231,25 @@ class ParcourState extends State<Parcour>
     ///print("Updating height");
     if (_deviceIsStationary(0.3)) {
       _velocity = 0.0;
-      _height = 0.0;
+      _currentHeight = 0.0;
     } else {
       // Integrate acceleration to get velocity.
       _velocity += currentAcc * _timeSlice;
 
       // Integrate velocity to get height.
-      _height += _velocity * _timeSlice;
+      _currentHeight += _velocity * _timeSlice;
     }
 
     // Prevent height from going negative.
-    _height = max(0, _height);
+    _currentHeight = max(0, _currentHeight);
 
     // Update maximum height if the current height is greater.
-    if (_height > _maxHeight) {
-      _maxHeight = _height;
+    if (_currentHeight > _maxHeight) {
+      _maxHeight = _currentHeight;
     }
-
-    setState(() {
-      _jumpData.add(Jump(DateTime.now(), _height));
-    });
   }
 
-
   /// Builds the UI for the Parcour game.
-  /// It displays a line chart of jump height over time and the maximum jump height achieved.
-  // This build function is getting a little too big. Consider refactoring.
   @override
   Widget build(BuildContext context) {
     ///print("wir builden in parcour.dart");
@@ -340,14 +327,14 @@ class ParcourState extends State<Parcour>
       child: ElevatedButton(
         onPressed: _earableConnected
             ? () {
-                _isJumping ? stopJump() : _startJump();
+                _gameActive ? stopGame() : _startGame();
               }
             : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor: !_isJumping ? Colors.greenAccent : Colors.red,
+          backgroundColor: !_gameActive ? Colors.greenAccent : Colors.red,
           foregroundColor: Colors.black,
         ),
-        child: Text(_isJumping ? 'Stop Jump' : 'Set Baseline & Start Game'),
+        child: Text(_gameActive ? 'Stop Jump' : 'Set Baseline & Start Game'),
       ),
     );
   }
