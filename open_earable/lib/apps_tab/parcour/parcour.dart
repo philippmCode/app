@@ -26,6 +26,7 @@ class GameState {
   double lastUpdateTime = 0.0;
   double currentTime = 0.0;
   int obstaclesOvercome = 0;
+  int highScore = 0;
 
   void initializeTimer() {
     lastUpdateTime = 0.0;
@@ -48,6 +49,9 @@ class GameState {
   }
 
   void stopGameState() {
+    if (obstaclesOvercome > highScore) {
+      highScore = obstaclesOvercome;
+    }
     obstaclesOvercome = 0;
     isGameRunning = false;
     timer.cancel();
@@ -315,6 +319,10 @@ class ParcourState extends State<Parcour>
       children: [
         Text(
           'Obstacles overcome: ${gameState.obstaclesOvercome}',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        Text(
+          'Current High Score: ${gameState.highScore}',
           style: Theme.of(context).textTheme.headlineMedium,
         ),
       ],
