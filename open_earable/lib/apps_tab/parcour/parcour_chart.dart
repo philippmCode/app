@@ -263,7 +263,7 @@ class _ParcourChartState extends State<ParcourChart> {
         width: 50,
         height: 50,
         speed: placeSpeed,
-      ));
+      ),);
     }
     checkCollisions();
   });
