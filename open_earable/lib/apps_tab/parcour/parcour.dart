@@ -34,14 +34,13 @@ class GameState {
     timer = Timer.periodic(Duration(milliseconds: 16), (timer) {
       currentTime = timer.tick * 0.016;
     });
-    print("lastUpdateTime: $lastUpdateTime");
-    print("Game State Time: $currentTime");
+    //print("lastUpdateTime: $lastUpdateTime");
+    //print("Game State Time: $currentTime");
   }
 
   void startGameState() {
-    print("starten das Game");
+    //print("starten das Game");
     isGameRunning = true;
-    print("lastUpdateTime: $lastUpdateTime");
   }
 
   double getCurrentTime() {
@@ -151,7 +150,7 @@ class ParcourState extends State<Parcour>
   /// Starts the jump height measurement process.
   /// It sets the sampling rate, initializes or resets variables, and begins listening to sensor data.
   void _startGame() {
-    print("Starting jump");
+    print("Starting game");
 
     gameState.initializeTimer();
     gameState.startGameState();

@@ -85,7 +85,9 @@ class _ParcourChartState extends State<ParcourChart> {
 
   late Player player;
   List<Obstacle> obstacles = [];
+  List<Platform> platforms = [];
   double lastUpdateTime = 0.0;
+  bool onPlatform = false;
 
   @override
   void initState() {
@@ -98,10 +100,10 @@ class _ParcourChartState extends State<ParcourChart> {
     _setupListeners();
       player = Player(
         x: 150,
-        y: 100,
+        y: 200,
         width: 50,
         height: 50,
-        groundLevel: 100,
+        groundLevel: 200,
     );
   }
       
@@ -238,36 +240,67 @@ class _ParcourChartState extends State<ParcourChart> {
     }
   }
 
-  void updateGame(double dt) {
-  if (!widget.gameState.isGameRunning) return; // Prevent further updates if game not active
-  ///print("updating game");
+
+void updateGame(double dt) {
+  if (!widget.gameState.isGameRunning) return; // Verhindere weitere Updates, wenn das Spiel gestoppt wurde
+  //print("updating game");
   setState(() {
+
     player.update(dt);
-    List<Obstacle> obstaclesToRemove = []; // list of the obstacles that are to be removed
-    for (var obstacle in obstacles) {
-      obstacle.update(dt);
-      print("obstacle x: ${obstacle.x}");
-      if (obstacle.x < -obstacle.width) {
-        obstaclesToRemove.add(obstacle); // add the obstacle to the list of obstacles to be removed
-        widget.gameState.obstaclesOvercome++; // increase the number of obstacles overcome
+
+    List<Platform> platformsToRemove = [];
+    for (var platform in platforms) {
+      platform.update(dt);
+
+      if (platform.x < -platform.width) {
+        platformsToRemove.add(platform); // Füge das Hindernis zur Liste der zu entfernenden Hindernisse hinzu
       }
     }
-    // remove that are no longer visible on the screen
-    obstacles.removeWhere((obstacle) => obstaclesToRemove.contains(obstacle));
+    // Entferne die Hindernisse nach der Iteration
+    platforms.removeWhere((platform) => platformsToRemove.contains(platform));
+
     double placeSpeed = 200.0;
-    if (obstacles.isEmpty || obstacles.last.x < 200) {
-      placeSpeed += 50.0;
-      obstacles.add(Obstacle(
-        x: MediaQuery.of(context).size.width,
-        y: 100,
-        width: 50,
-        height: 50,
+    double screenWidth = MediaQuery.of(context).size.width; // Breite des Bildschirms
+
+    if (platforms.isEmpty) {
+
+      // Erzeuge eine Plattform
+      platforms.add(Platform(
+        x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
+        y: 125,
+        width: 200,
+        height: 25,
         speed: placeSpeed,
       ),);
-    }
+    } 
+    checkPlatform();
     checkCollisions();
   });
 }
+
+  void checkPlatform() {
+    print("checking platforms");
+    for (var platform in platforms) {
+
+      var playerRect = player.getRect();
+      var platformRect = platform.getRect();
+
+      // Prüfen, ob der Spieler über der Plattform ist (nicht Berührung, sondern oberhalb)
+      bool isOnPlatform = playerRect.bottom <= platformRect.top &&
+                            playerRect.right > platformRect.left &&
+                            playerRect.left < platformRect.right;
+      if (isOnPlatform && !onPlatform) {
+        player.enterPlatform(platform);
+        onPlatform = true;
+        break; // break the loop
+      }
+      else if (onPlatform && !isOnPlatform) {
+        print("calling the method to leave the platform");
+        player.leavePlatform();
+        onPlatform = false;
+      }
+    }
+  }
 
   void checkCollisions() {
     ///print("checking collisions");
@@ -278,6 +311,7 @@ class _ParcourChartState extends State<ParcourChart> {
         widget.parcourState.stopGame();
         widget.gameState.lastUpdateTime = 0.0; // set the time back
         obstacles.clear(); // clear the obstacles
+        platforms.clear(); // clear the platforms
         _handleCollision();
         break; // break the loop
       }
@@ -308,13 +342,13 @@ class _ParcourChartState extends State<ParcourChart> {
 
 void _resetGame() {
   setState(() {
-    print("resetting game");
+    //print("resetting game");
     player = Player(
       x: 150,
-      y: 100,
+      y: 200,
       width: 50,
       height: 50,
-      groundLevel: 100,
+      groundLevel: 200,
     );
     widget.gameState.startGameState(); // restart the game
   });
@@ -336,11 +370,10 @@ void _resetGame() {
     ///print("parcour chart building");
     if (widget.gameState.isGameRunning) {
       double timeNow = widget.gameState.currentTime;
-      print("timeNow: $timeNow");
       //print("currentTime: $timeNow" "lastUpdateTime: ${widget.gameState.lastUpdateTime}");  
       double dt = timeNow - widget.gameState.lastUpdateTime;
       widget.gameState.lastUpdateTime = timeNow;
-      print("dt setzen: $dt");
+      //print("dt setzen: $dt");
       updateGame(dt);
     }
     return Container(
@@ -348,7 +381,7 @@ void _resetGame() {
         children: [
           Expanded(
             child: CustomPaint(
-              painter: ParcourPainter(player: player, obstacles: obstacles),
+              painter: ParcourPainter(player: player, obstacles: obstacles, platforms: platforms),
               child: Container(),
             ),
           ),
@@ -491,6 +524,30 @@ class Jump extends DataValue {
   }
 }
 
+class Platform {
+  double x;
+  double y;
+  double width;
+  double height;
+  double speed;
+
+  Platform({
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.height,
+    required this.speed,
+  });
+
+  void update(double dt) {
+    x -= speed * dt;
+  }
+
+  Rect getRect() {
+    return Rect.fromLTWH(x, y, width, height);
+  }
+}
+
 class Player {
   double x;
   double y;
@@ -500,6 +557,9 @@ class Player {
   double gravity;
   double groundLevel;
   double targetHeight;
+  double baselineHeight = 0.0;
+  bool onPlatform = false;
+  Platform? platform = null;
 
   Player({
     required this.x,
@@ -512,16 +572,50 @@ class Player {
     required this.groundLevel,
   });
 
+  void enterPlatform(Platform platform) {
+    print("player entered platform");
+    onPlatform = true;
+    this.platform = platform;
+    isJumping = false;
+  }
+
+  void leavePlatform() {
+    print("player left platform");
+    onPlatform = false;
+    platform = null;
+  }
+
   void update(double dt) {
     if (isJumping) {
+      print("is jumping");
       y -= (targetHeight) * dt; // move player towards target height
       if (y <= groundLevel - targetHeight) {
         y = groundLevel - targetHeight;
+        print("wir sind oben angekommen");
         isJumping = false;
       }
-    } else {
-      if (y < groundLevel) {
+    } 
+    else if (onPlatform) {
+        print("platform height: ${platform!.y}");
+        print("rechnung: ${platform!.y - height}");
+        double movement = targetHeight * dt;
+        if (y + movement < platform!.y - height) {
+          print("move player back to platform");
+          y += movement; // move player back towards the ground
+        } 
+        else {
+          y = platform!.y - height;
+          print("auf plattform gelandet");
+        }
+    }
+    else {
+      if (!onPlatform && y < groundLevel) {
+        print("move player back to ground");
+        print("y: $y");
+        print("groundLevel: $groundLevel");
+        print("dt: $dt");
         y += (targetHeight) * dt; // move player back towards the ground
+        print("new y: $y");
         if (y > groundLevel) {
           y = groundLevel;
         }
@@ -530,9 +624,10 @@ class Player {
   }
 
   void jump() {
+    print("calling jump");
     if (!isJumping) {
       isJumping = true;
-      targetHeight = 3 * height;
+      targetHeight = 3.5 * height;
       ///print('Jump initiated to height: $targetHeight'); // Debug-Ausgabe der Sprunggeschwindigkeit
     }
   }
@@ -559,7 +654,7 @@ class Obstacle {
 
   void update(double dt) {
     x -= speed * dt;
-    print("Obstacle updated: x = $x, speed = $speed, dt = $dt"); // Debug-Ausgabe
+    ///print("Obstacle updated: x = $x, speed = $speed, dt = $dt"); // Debug-Ausgabe
   }
 
   Rect getRect() {
@@ -571,8 +666,9 @@ class ParcourPainter extends CustomPainter {
 
   final Player player;
   final List<Obstacle> obstacles;
+  final List<Platform> platforms;
 
-  ParcourPainter({required this.player, required this.obstacles});
+  ParcourPainter({required this.player, required this.obstacles, required this.platforms});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -607,6 +703,12 @@ class ParcourPainter extends CustomPainter {
     for (var obstacle in obstacles) {
       ///print("obstacle x: ${obstacle.x}");
       canvas.drawRect(obstacle.getRect(), obstaclePaint);
+    }
+
+    //draw platforms
+    final platformPaint = Paint()..color = Colors.green;
+    for (var platform in platforms) {
+      canvas.drawRect(platform.getRect(), platformPaint);
     }
 
     // horizontal scale on x axis with 50px steps
