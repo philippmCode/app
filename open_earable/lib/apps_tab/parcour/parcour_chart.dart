@@ -270,7 +270,7 @@ void updateGame(double dt) {
       gaps.add(Gap(
         x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
         y: 250,
-        width: 200,
+        width: 300,
         height: 50,
         speed: placeSpeed,
       ),);
