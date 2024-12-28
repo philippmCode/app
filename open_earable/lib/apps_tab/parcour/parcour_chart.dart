@@ -243,68 +243,83 @@ class _ParcourChartState extends State<ParcourChart> {
   }
 
 
-void updateGame(double dt) {
-  if (!widget.gameState.isGameRunning) return; // Verhindere weitere Updates, wenn das Spiel gestoppt wurde
-  //print("updating game");
-  setState(() {
+  void updateGame(double dt) {
+    if (!widget.gameState.isGameRunning) return; // Verhindere weitere Updates, wenn das Spiel gestoppt wurde
+    //print("updating game");
+    setState(() {
 
-    player.update(dt);
+      player.update(dt);
 
-    List<Gap> gapsToRemove = [];
-    for (var gap in gaps) {
-      gap.update(dt);
-
-      if (gap.x < -gap.width) {
-        gapsToRemove.add(gap); // Füge das Hindernis zur Liste der zu entfernenden Hindernisse hinzu
+      List<Platform> platformsToRemove = [];
+      for (var platform in platforms) {
+        platform.update(dt);
+        if (platform.x < -platform.width) {
+          platformsToRemove.add(platform); // Füge das Hindernis zur Liste der zu entfernenden Hindernisse hinzu
+        }
       }
-    }
-    // Entferne die Hindernisse nach der Iteration
-    gaps.removeWhere((gap) => gapsToRemove.contains(gap));
+      platforms.removeWhere((platform) => platformsToRemove.contains(platform));
 
-    double placeSpeed = 200.0;
-    double screenWidth = MediaQuery.of(context).size.width; // Breite des Bildschirms
-
-    if (obstacles.isEmpty && platforms.isEmpty) {
-      placeSpeed += 50.0;
-      Random random = Random();
-      if (random.nextBool()) {
-        // Erzeuge ein Hindernis
-        obstacles.add(Obstacle(
-          x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
-          y: 100,
-          width: 50,
-          height: 50,
-          speed: placeSpeed,
-        ));
-
-      } else {
-        // Erzeuge eine Plattform
-        platforms.add(Platform(
-          x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
-          y: 80, // Beispielhöhe für die Plattform
-          width: 200,
-          height: 20,
-          speed: placeSpeed
-        ));
-        print("New platform added: x = $screenWidth"); // Debug-Ausgabe
+      List<Gap> gapsToRemove = [];
+      for (var gap in gaps) {
+        gap.update(dt);
+        if (gap.x < -gap.width) {
+          gapsToRemove.add(gap); // Füge das Hindernis zur Liste der zu entfernenden Hindernisse hinzu
+        }
       }
-    }
-    if (gaps.isEmpty) {
+      gaps.removeWhere((gap) => gapsToRemove.contains(gap));
 
-      // Erzeuge eine Plattform
-      gaps.add(Gap(
-        x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
-        y: 250,
-        width: 300,
-        height: 50,
-        speed: placeSpeed,
-      ),);
-    } 
-    checkGap();
-    checkPlatform();
-    checkCollisions();
-  });
-}
+      List<Obstacle> obstaclesToRemove = [];
+      for (var obstacle in obstacles) {
+        obstacle.update(dt);
+        if (obstacle.x < -obstacle.width) {
+          obstaclesToRemove.add(obstacle); // Füge das Hindernis zur Liste der zu entfernenden Hindernisse hinzu
+          widget.gameState.obstaclesOvercome++; // Erhöhe den Zähler
+        }
+      }
+      obstacles.removeWhere((obstacle) => obstaclesToRemove.contains(obstacle));
+
+      double placeSpeed = 400.0;
+      double screenWidth = MediaQuery.of(context).size.width; // Breite des Bildschirms
+
+      if (obstacles.isEmpty && platforms.isEmpty && gaps.isEmpty) {
+        Random random = Random();
+        int choice = random.nextInt(3); // Zufällige Auswahl zwischen 0, 1 und 2
+
+        if (choice == 0) {
+          // Erzeuge ein Hindernis
+          obstacles.add(Obstacle(
+            x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
+            y: 200,
+            width: 50,
+            height: 50,
+            speed: placeSpeed,
+          ),);
+        } else if (choice == 1) {
+          // Erzeuge eine Plattform
+          platforms.add(Platform(
+            x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
+            y: 125,
+            width: 200,
+            height: 25,
+            speed: placeSpeed,
+          ),);
+        } else {
+          // Erzeuge eine Lücke
+          gaps.add(Gap(
+            x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
+            y: 250,
+            width: 300,
+            height: 25,
+            speed: placeSpeed,
+          ),);
+        }
+    }
+      checkGap();
+      checkPlatform();
+      checkCollisions();
+    });
+  }
+
   void checkGap() {
     print("checking gaps");
     for (var gap in gaps) {
