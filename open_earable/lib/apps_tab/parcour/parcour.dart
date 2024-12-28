@@ -276,13 +276,16 @@ class ParcourState extends State<Parcour>
               Tab(text: 'Height'),
             ],
           ),
-          Expanded(
-            child: (!widget.openEarable.bleManager.connected)
-                ? EarableNotConnectedWarning()
-                : _buildJumpHeightDataTabs(),
-          ),
+        Expanded(
+          child: (!widget.openEarable.bleManager.connected)
+              ? EarableNotConnectedWarning()
+              : _buildParcourDataTabs(),
+        ),
           SizedBox(height: 20), // Margin between chart and button
-          _buildButtons(),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: _buildButtons(),
+        ),
           Visibility(
             // Show error message if no OpenEarable device is connected.
             visible: !_earableConnected,
@@ -297,13 +300,17 @@ class ParcourState extends State<Parcour>
             ),
           ),
           SizedBox(height: 20), // Margin between button and text
-          _buildText(),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: _buildText(),
+          ),
+          SizedBox(height: 60), // Margin between button and text
         ],
       ),
     );
   }
 
-  Widget _buildJumpHeightDataTabs() {
+  Widget _buildParcourDataTabs() {
     return TabBarView(
       controller: _tabController,
       children: [
@@ -330,8 +337,7 @@ class ParcourState extends State<Parcour>
 
   /// Builds buttons to start and stop the jump height measurement process.
   Widget _buildButtons() {
-    return Flexible(
-      child: ElevatedButton(
+    return ElevatedButton(
         onPressed: _earableConnected
             ? () {
                 _gameActive ? stopGame() : _startGame();
@@ -342,8 +348,7 @@ class ParcourState extends State<Parcour>
           foregroundColor: Colors.black,
         ),
         child: Text(_gameActive ? 'Stop Jump' : 'Set Baseline & Start Game'),
-      ),
-    );
+      );
   }
 
   /// Builds a sensor configuration for the OpenEarable device.

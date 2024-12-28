@@ -86,8 +86,10 @@ class _ParcourChartState extends State<ParcourChart> {
   late Player player;
   List<Obstacle> obstacles = [];
   List<Platform> platforms = [];
+  List<Gap> gaps = [];
   double lastUpdateTime = 0.0;
-  bool onPlatform = false;
+  bool enteredPlatform = false;
+  bool enteredGap = false;
 
   @override
   void initState() {
@@ -248,35 +250,58 @@ void updateGame(double dt) {
 
     player.update(dt);
 
-    List<Platform> platformsToRemove = [];
-    for (var platform in platforms) {
-      platform.update(dt);
+    List<Gap> gapsToRemove = [];
+    for (var gap in gaps) {
+      gap.update(dt);
 
-      if (platform.x < -platform.width) {
-        platformsToRemove.add(platform); // Füge das Hindernis zur Liste der zu entfernenden Hindernisse hinzu
+      if (gap.x < -gap.width) {
+        gapsToRemove.add(gap); // Füge das Hindernis zur Liste der zu entfernenden Hindernisse hinzu
       }
     }
     // Entferne die Hindernisse nach der Iteration
-    platforms.removeWhere((platform) => platformsToRemove.contains(platform));
+    gaps.removeWhere((gap) => gapsToRemove.contains(gap));
 
     double placeSpeed = 200.0;
     double screenWidth = MediaQuery.of(context).size.width; // Breite des Bildschirms
 
-    if (platforms.isEmpty) {
+    if (gaps.isEmpty) {
 
       // Erzeuge eine Plattform
-      platforms.add(Platform(
+      gaps.add(Gap(
         x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
-        y: 125,
+        y: 250,
         width: 200,
-        height: 25,
+        height: 50,
         speed: placeSpeed,
       ),);
     } 
+    checkGap();
     checkPlatform();
     checkCollisions();
   });
 }
+  void checkGap() {
+    print("checking gaps");
+    for (var gap in gaps) {
+
+      var playerRect = player.getRect();
+      var gapRect = gap.getRect();
+
+      // Prüfen, ob der Spieler über der Plattform ist (nicht Berührung, sondern oberhalb)
+      bool isOverGap = playerRect.right > gapRect.left && playerRect.left < gapRect.right;
+
+      if (isOverGap && !enteredGap) {
+        player.enterGap(gap);
+        enteredGap = true;
+        break; // break the loop
+      }
+      else if (enteredGap && !isOverGap) {
+        print("calling the method to leave the gap");
+        player.leaveGap();
+        enteredGap = false;
+      }
+    }
+  }
 
   void checkPlatform() {
     print("checking platforms");
@@ -286,18 +311,18 @@ void updateGame(double dt) {
       var platformRect = platform.getRect();
 
       // Prüfen, ob der Spieler über der Plattform ist (nicht Berührung, sondern oberhalb)
-      bool isOnPlatform = playerRect.bottom <= platformRect.top &&
+      bool isOverPlatform = playerRect.bottom <= platformRect.top &&
                             playerRect.right > platformRect.left &&
                             playerRect.left < platformRect.right;
-      if (isOnPlatform && !onPlatform) {
+      if (isOverPlatform && !enteredPlatform) {
         player.enterPlatform(platform);
-        onPlatform = true;
+        enteredPlatform = true;
         break; // break the loop
       }
-      else if (onPlatform && !isOnPlatform) {
+      else if (enteredPlatform && !isOverPlatform) {
         print("calling the method to leave the platform");
         player.leavePlatform();
-        onPlatform = false;
+        enteredPlatform = false;
       }
     }
   }
@@ -306,12 +331,13 @@ void updateGame(double dt) {
     ///print("checking collisions");
     for (var obstacle in obstacles) {
       if (player.getRect().overlaps(obstacle.getRect())) {
- 
-        print("collision detected");
-        widget.parcourState.stopGame();
-        widget.gameState.lastUpdateTime = 0.0; // set the time back
-        obstacles.clear(); // clear the obstacles
-        platforms.clear(); // clear the platforms
+        _handleCollision();
+        break; // break the loop
+      }
+    }
+    ///player collides right side of the gap
+    for (var gap in gaps) {
+      if (player.getRect().right >= gap.getRect().right && player.getRect().bottom >= gap.getRect().top) {
         _handleCollision();
         break; // break the loop
       }
@@ -320,6 +346,11 @@ void updateGame(double dt) {
 
   void _handleCollision() {
   // Beispiel: Zeige eine Nachricht an und setze den Spielzustand zurück
+    print("collision detected");
+    widget.parcourState.stopGame();
+    widget.gameState.lastUpdateTime = 0.0; // set the time back
+    obstacles.clear(); // clear the obstacles
+    platforms.clear(); // clear the platforms
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -381,7 +412,7 @@ void _resetGame() {
         children: [
           Expanded(
             child: CustomPaint(
-              painter: ParcourPainter(player: player, obstacles: obstacles, platforms: platforms),
+              painter: ParcourPainter(player: player, obstacles: obstacles, platforms: platforms, gaps: gaps),
               child: Container(),
             ),
           ),
@@ -548,6 +579,30 @@ class Platform {
   }
 }
 
+class Gap {
+  double x;
+  double y;
+  double width;
+  double height;
+  double speed;
+
+  Gap({
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.height,
+    required this.speed,
+  });
+
+  void update(double dt) {
+    x -= 200 * dt;
+  }
+
+  Rect getRect() {
+    return Rect.fromLTWH(x, y, width, height);
+  }
+}
+
 class Player {
   double x;
   double y;
@@ -556,10 +611,11 @@ class Player {
   bool isJumping;
   double gravity;
   double groundLevel;
-  double targetHeight;
-  double baselineHeight = 0.0;
-  bool onPlatform = false;
-  Platform? platform = null;
+  double jumpHeight;
+  bool enteredPlatform = false;
+  Platform? platform;
+  bool enteredGap = false;
+  Gap? gap;
 
   Player({
     required this.x,
@@ -567,38 +623,70 @@ class Player {
     required this.width,
     required this.height,
     this.isJumping = false,
-    this.targetHeight = 0.0,
+    this.jumpHeight = 0.0,
     this.gravity = 9.8,
     required this.groundLevel,
   });
 
+  void enterGap(Gap gap) {
+    print("player entered gap");
+    enteredGap = true;
+    this.gap = gap;
+  }
+
+  void leaveGap() {
+    print("player left gap");
+    enteredGap = false;
+    gap = null;
+  }
+
   void enterPlatform(Platform platform) {
     print("player entered platform");
-    onPlatform = true;
+    enteredPlatform = true;
     this.platform = platform;
     isJumping = false;
   }
 
   void leavePlatform() {
     print("player left platform");
-    onPlatform = false;
+    enteredPlatform = false;
     platform = null;
   }
 
+  void sinkdown(double dt, double targetHeight) {
+
+    print("targetHeight: $targetHeight");
+    double movement = targetHeight * dt;
+    if (y + movement < targetHeight) {
+      y += movement; // move player back towards the ground
+    }
+    else {
+      y = targetHeight;
+    }
+  }
+
+  void riseUp(double dt) {
+
+    y -= (jumpHeight) * dt; // move player towards target height
+
+    // check if player reached target height
+    if (y <= groundLevel - jumpHeight) {
+      y = groundLevel - jumpHeight;
+      isJumping = false;
+    }
+  }
+
   void update(double dt) {
+
     if (isJumping) {
-      print("is jumping");
-      y -= (targetHeight) * dt; // move player towards target height
-      if (y <= groundLevel - targetHeight) {
-        y = groundLevel - targetHeight;
-        print("wir sind oben angekommen");
-        isJumping = false;
-      }
+      
+      riseUp(dt);
     } 
-    else if (onPlatform) {
+    else if (enteredPlatform) {
+
         print("platform height: ${platform!.y}");
         print("rechnung: ${platform!.y - height}");
-        double movement = targetHeight * dt;
+        double movement = jumpHeight * dt;
         if (y + movement < platform!.y - height) {
           print("move player back to platform");
           y += movement; // move player back towards the ground
@@ -608,18 +696,17 @@ class Player {
           print("auf plattform gelandet");
         }
     }
-    else {
-      if (!onPlatform && y < groundLevel) {
-        print("move player back to ground");
-        print("y: $y");
-        print("groundLevel: $groundLevel");
-        print("dt: $dt");
-        y += (targetHeight) * dt; // move player back towards the ground
-        print("new y: $y");
-        if (y > groundLevel) {
-          y = groundLevel;
-        }
+    else if (enteredGap) {
+
+      if (!isJumping && y < gap!.y) {
+        print("move player back to gap");
+        sinkdown(dt, groundLevel + gap!.height);
       }
+
+    }
+    else {
+      print("sinkdown");
+      sinkdown(dt, groundLevel);
     }
   }
 
@@ -627,7 +714,7 @@ class Player {
     print("calling jump");
     if (!isJumping) {
       isJumping = true;
-      targetHeight = 3.5 * height;
+      jumpHeight = 3.5 * height;
       ///print('Jump initiated to height: $targetHeight'); // Debug-Ausgabe der Sprunggeschwindigkeit
     }
   }
@@ -667,8 +754,9 @@ class ParcourPainter extends CustomPainter {
   final Player player;
   final List<Obstacle> obstacles;
   final List<Platform> platforms;
+  final List<Gap> gaps;
 
-  ParcourPainter({required this.player, required this.obstacles, required this.platforms});
+  ParcourPainter({required this.player, required this.obstacles, required this.platforms, required this.gaps});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -703,6 +791,16 @@ class ParcourPainter extends CustomPainter {
     for (var obstacle in obstacles) {
       ///print("obstacle x: ${obstacle.x}");
       canvas.drawRect(obstacle.getRect(), obstaclePaint);
+    }
+
+    //draw gaps
+    final gapPaint = Paint()..color = Colors.pink;
+    for (var gap in gaps) {
+      canvas.drawLine(
+        Offset(gap.x, gap.y + gap.height),
+        Offset(gap.x + gap.width, gap.y + gap.height),
+        gapPaint,
+      );
     }
 
     //draw platforms
