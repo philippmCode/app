@@ -321,14 +321,14 @@ class _ParcourChartState extends State<ParcourChart> {
   }
 
   void checkGap() {
-    print("checking gaps");
+
     for (var gap in gaps) {
 
       var playerRect = player.getRect();
       var gapRect = gap.getRect();
 
       // Prüfen, ob der Spieler über der Plattform ist (nicht Berührung, sondern oberhalb)
-      bool isOverGap = playerRect.right > gapRect.left && playerRect.left < gapRect.right;
+      bool isOverGap = playerRect.right > gapRect.left && playerRect.right < gapRect.right;
 
       if (isOverGap && !enteredGap) {
         player.enterGap(gap);
@@ -344,7 +344,7 @@ class _ParcourChartState extends State<ParcourChart> {
   }
 
   void checkPlatform() {
-    print("checking platforms");
+
     for (var platform in platforms) {
 
       var playerRect = player.getRect();
@@ -371,13 +371,22 @@ class _ParcourChartState extends State<ParcourChart> {
     ///print("checking collisions");
     for (var obstacle in obstacles) {
       if (player.getRect().overlaps(obstacle.getRect())) {
+        print("obstacle collision detected");
         _handleCollision();
         break; // break the loop
       }
     }
     ///player collides right side of the gap
     for (var gap in gaps) {
-      if (player.getRect().right >= gap.getRect().right && player.getRect().bottom >= gap.getRect().top) {
+      if (player.getRect().right >= gap.getRect().right &&
+      player.getRect().left < gap.getRect().right && // Spieler ist noch innerhalb des Gaps auf der linken Seite
+      player.getRect().bottom >= gap.getRect().top && // Spieler ist nicht unterhalb des Gaps
+      player.getRect().top <= gap.getRect().bottom) {
+        print("gap collision detected");
+        print("player right: ${player.getRect().right}");
+        print ("gap right: ${gap.getRect().right}");
+        print("player bottom: ${player.getRect().bottom}");
+        print("gap top: ${gap.getRect().top}");
         _handleCollision();
         break; // break the loop
       }
@@ -415,7 +424,7 @@ void _resetGame() {
   setState(() {
     //print("resetting game");
     player = Player(
-      x: 150,
+      x: 200,
       y: 200,
       width: 50,
       height: 50,
@@ -635,7 +644,7 @@ class Gap {
   });
 
   void update(double dt) {
-    x -= 200 * dt;
+    x -= speed * dt;
   }
 
   Rect getRect() {
@@ -739,12 +748,12 @@ class Player {
     else if (enteredGap) {
 
       if (!isJumping && y < gap!.y) {
-        print("move player back to gap");
+        print("move player down in the gap");
         sinkdown(dt, groundLevel + gap!.height);
       }
 
     }
-    else {
+    else if (y < groundLevel) {
       print("sinkdown");
       sinkdown(dt, groundLevel);
     }
@@ -805,6 +814,13 @@ class ParcourPainter extends CustomPainter {
     final zeroLinePaint = Paint()..color = Colors.black;
     canvas.drawLine(Offset(0, size.height / 2), Offset(size.width, size.height / 2), zeroLinePaint);
 
+    // Zeichne die Fläche unter der 0-Linie grün
+    final greenPaint = Paint()..color = Colors.green;
+    canvas.drawRect(
+      Rect.fromLTRB(0, 250, size.width, size.height),
+      greenPaint,
+    );
+
     // vertical scale with 50px steps
     final verticalLinePaint = Paint()..color = Colors.blue;
     final textPainter = TextPainter(
@@ -822,10 +838,6 @@ class ParcourPainter extends CustomPainter {
       textPainter.paint(canvas, Offset(15, i - 6));
     }
 
-    // draw player
-    final playerPaint = Paint()..color = Colors.yellow;
-    canvas.drawRect(player.getRect(), playerPaint);
-
     // draw obstacles
     final obstaclePaint = Paint()..color = Colors.red;
     for (var obstacle in obstacles) {
@@ -834,13 +846,9 @@ class ParcourPainter extends CustomPainter {
     }
 
     //draw gaps
-    final gapPaint = Paint()..color = Colors.pink;
+    final gapPaint = Paint()..color = Colors.black;
     for (var gap in gaps) {
-      canvas.drawLine(
-        Offset(gap.x, gap.y + gap.height),
-        Offset(gap.x + gap.width, gap.y + gap.height),
-        gapPaint,
-      );
+      canvas.drawRect(gap.getRect(), gapPaint); 
     }
 
     //draw platforms
@@ -848,6 +856,10 @@ class ParcourPainter extends CustomPainter {
     for (var platform in platforms) {
       canvas.drawRect(platform.getRect(), platformPaint);
     }
+
+    // draw player
+    final playerPaint = Paint()..color = Colors.yellow;
+    canvas.drawRect(player.getRect(), playerPaint);
 
     // horizontal scale on x axis with 50px steps
     final horizontalLinePaint = Paint()..color = Colors.green;
