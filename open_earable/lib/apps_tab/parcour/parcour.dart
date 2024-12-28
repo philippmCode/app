@@ -34,14 +34,13 @@ class GameState {
     timer = Timer.periodic(Duration(milliseconds: 16), (timer) {
       currentTime = timer.tick * 0.016;
     });
-    print("lastUpdateTime: $lastUpdateTime");
-    print("Game State Time: $currentTime");
+    //print("lastUpdateTime: $lastUpdateTime");
+    //print("Game State Time: $currentTime");
   }
 
   void startGameState() {
-    print("starten das Game");
+    //print("starten das Game");
     isGameRunning = true;
-    print("lastUpdateTime: $lastUpdateTime");
   }
 
   double getCurrentTime() {
@@ -151,7 +150,7 @@ class ParcourState extends State<Parcour>
   /// Starts the jump height measurement process.
   /// It sets the sampling rate, initializes or resets variables, and begins listening to sensor data.
   void _startGame() {
-    print("Starting jump");
+    print("Starting game");
 
     gameState.initializeTimer();
     gameState.startGameState();
@@ -277,13 +276,16 @@ class ParcourState extends State<Parcour>
               Tab(text: 'Height'),
             ],
           ),
-          Expanded(
-            child: (!widget.openEarable.bleManager.connected)
-                ? EarableNotConnectedWarning()
-                : _buildJumpHeightDataTabs(),
-          ),
+        Expanded(
+          child: (!widget.openEarable.bleManager.connected)
+              ? EarableNotConnectedWarning()
+              : _buildParcourDataTabs(),
+        ),
           SizedBox(height: 20), // Margin between chart and button
-          _buildButtons(),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: _buildButtons(),
+        ),
           Visibility(
             // Show error message if no OpenEarable device is connected.
             visible: !_earableConnected,
@@ -298,13 +300,17 @@ class ParcourState extends State<Parcour>
             ),
           ),
           SizedBox(height: 20), // Margin between button and text
-          _buildText(),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: _buildText(),
+          ),
+          SizedBox(height: 60), // Margin between button and text
         ],
       ),
     );
   }
 
-  Widget _buildJumpHeightDataTabs() {
+  Widget _buildParcourDataTabs() {
     return TabBarView(
       controller: _tabController,
       children: [
@@ -331,8 +337,7 @@ class ParcourState extends State<Parcour>
 
   /// Builds buttons to start and stop the jump height measurement process.
   Widget _buildButtons() {
-    return Flexible(
-      child: ElevatedButton(
+    return ElevatedButton(
         onPressed: _earableConnected
             ? () {
                 _gameActive ? stopGame() : _startGame();
@@ -343,8 +348,7 @@ class ParcourState extends State<Parcour>
           foregroundColor: Colors.black,
         ),
         child: Text(_gameActive ? 'Stop Jump' : 'Set Baseline & Start Game'),
-      ),
-    );
+      );
   }
 
   /// Builds a sensor configuration for the OpenEarable device.
