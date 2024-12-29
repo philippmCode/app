@@ -104,14 +104,10 @@ class ParcourState extends State<Parcour>
   /// Pitch angle in radians.
   double _pitch = 0.0;
 
-  /// Manages the [TabBar].
-  late TabController _tabController;
-
   /// Initializes state and sets up listeners for sensor data.
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(vsync: this, length: 3);
     // Set up listeners for sensor data.
     if (widget.openEarable.bleManager.connected) {
       // Set sampling rate to maximum.
@@ -266,7 +262,7 @@ class ParcourState extends State<Parcour>
         Expanded(
           child: (!widget.openEarable.bleManager.connected)
               ? EarableNotConnectedWarning()
-              : _buildParcourDataTabs(),
+              : ParcourChart(this, gameState, widget.openEarable, "Parcour"),
         ),
           SizedBox(height: 20), // Margin between chart and button
         Align(
@@ -294,15 +290,6 @@ class ParcourState extends State<Parcour>
           SizedBox(height: 60), // Margin between button and text
         ],
       ),
-    );
-  }
-
-  Widget _buildParcourDataTabs() {
-    return TabBarView(
-      controller: _tabController,
-      children: [
-        ParcourChart(this, gameState, widget.openEarable, "Parcour"),
-      ],
     );
   }
 

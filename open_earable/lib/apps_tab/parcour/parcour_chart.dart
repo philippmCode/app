@@ -123,10 +123,6 @@ class _ParcourChartState extends State<ParcourChart> {
           DataValue height = _calculateHeightData(filteredAccData);
           _updateData(height);
           break;
-        case "Height Data":
-          DataValue height = _calculateHeightData(filteredAccData);
-          _updateData(height);
-          break;
         default:
           throw ArgumentError("Invalid tab title.");
       }
@@ -181,7 +177,6 @@ class _ParcourChartState extends State<ParcourChart> {
       }
     });
   }
-
 
   @override
   void dispose() {
