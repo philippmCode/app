@@ -79,6 +79,7 @@ class _ParcourChartState extends State<ParcourChart> {
   double lastUpdateTime = 0.0;
   bool enteredPlatform = false;
   bool enteredGap = false;
+  late LevelManager levelManager;
 
   @override
   void initState() {
@@ -86,6 +87,8 @@ class _ParcourChartState extends State<ParcourChart> {
     super.initState();
     _data = [];
     colors = _getColor(widget.title);
+    double screenWidth = MediaQuery.of(context).size.width; // Breite des Bildschirms
+    levelManager = LevelManager(screenWidth: screenWidth);
     _setupListeners();
       player = Player(
         x: 150,
@@ -256,15 +259,34 @@ class _ParcourChartState extends State<ParcourChart> {
       }
       obstacles.removeWhere((obstacle) => obstaclesToRemove.contains(obstacle));
 
-      double screenWidth = MediaQuery.of(context).size.width; // Breite des Bildschirms
-
       if (obstacles.isEmpty && platforms.isEmpty && gaps.isEmpty) {
         
-        LevelManager levelManager = LevelManager(screenWidth: screenWidth);
         print("wir rufen ein level auf");
-        Level firstLevel = levelManager.getLevel(0);
-        obstacles = firstLevel.obstacles;
-    }
+        
+        Level actualLevel = levelManager.getLevel();
+        print("actualLevel: ${actualLevel.name}");
+        obstacles = actualLevel.obstacles.map((obstacle) => Obstacle(
+          x: obstacle.x,
+          y: obstacle.y,
+          width: obstacle.width,
+          height: obstacle.height,
+          speed: obstacle.speed,
+        )).toList();
+        platforms = actualLevel.platforms.map((platform) => Platform(
+          x: platform.x,
+          y: platform.y,
+          width: platform.width,
+          height: platform.height,
+          speed: platform.speed,
+        )).toList();
+        gaps = actualLevel.gaps.map((gap) => Gap(
+          x: gap.x,
+          y: gap.y,
+          width: gap.width,
+          height: gap.height,
+          speed: gap.speed,
+        )).toList();
+      }
       checkGap();
       checkPlatform();
       checkCollisions();
@@ -321,6 +343,7 @@ class _ParcourChartState extends State<ParcourChart> {
   void checkCollisions() {
     ///print("checking collisions");
     for (var obstacle in obstacles) {
+      print("obstacle x: ${obstacle.x}");
       if (player.getRect().overlaps(obstacle.getRect())) {
         print("obstacle collision detected");
         _handleCollision();
@@ -347,10 +370,12 @@ class _ParcourChartState extends State<ParcourChart> {
   void _handleCollision() {
   // Beispiel: Zeige eine Nachricht an und setze den Spielzustand zurück
     print("collision detected");
+    levelManager.reset();
     widget.parcourState.stopGame();
     widget.gameState.lastUpdateTime = 0.0; // set the time back
     obstacles.clear(); // clear the obstacles
     platforms.clear(); // clear the platforms
+    gaps.clear(); // clear the gaps
   showDialog(
     context: context,
     builder: (BuildContext context) {
