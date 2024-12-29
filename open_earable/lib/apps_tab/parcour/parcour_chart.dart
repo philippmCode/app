@@ -279,7 +279,6 @@ class _ParcourChartState extends State<ParcourChart> {
       }
       obstacles.removeWhere((obstacle) => obstaclesToRemove.contains(obstacle));
 
-      double placeSpeed = 400.0;
       double screenWidth = MediaQuery.of(context).size.width; // Breite des Bildschirms
 
       if (obstacles.isEmpty && platforms.isEmpty && gaps.isEmpty) {

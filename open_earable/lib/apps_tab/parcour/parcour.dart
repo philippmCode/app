@@ -273,7 +273,6 @@ class ParcourState extends State<Parcour>
             unselectedLabelColor: Colors.grey,
             tabs: [
               Tab(text: 'Parcour'),
-              Tab(text: 'Height'),
             ],
           ),
         Expanded(
@@ -315,7 +314,6 @@ class ParcourState extends State<Parcour>
       controller: _tabController,
       children: [
         ParcourChart(this, gameState, widget.openEarable, "Parcour"),
-        ParcourChart(this, gameState, widget.openEarable, "Height Data"),
       ],
     );
   }
