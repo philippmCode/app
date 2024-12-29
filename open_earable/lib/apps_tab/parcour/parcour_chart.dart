@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:open_earable/apps_tab/parcour/level.dart';
 import 'package:open_earable/apps_tab/parcour/parcour.dart';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'package:flutter/material.dart';
@@ -282,37 +283,11 @@ class _ParcourChartState extends State<ParcourChart> {
       double screenWidth = MediaQuery.of(context).size.width; // Breite des Bildschirms
 
       if (obstacles.isEmpty && platforms.isEmpty && gaps.isEmpty) {
-        Random random = Random();
-        int choice = random.nextInt(3); // Zufällige Auswahl zwischen 0, 1 und 2
-
-        if (choice == 0) {
-          // Erzeuge ein Hindernis
-          obstacles.add(Obstacle(
-            x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
-            y: 200,
-            width: 50,
-            height: 50,
-            speed: placeSpeed,
-          ),);
-        } else if (choice == 1) {
-          // Erzeuge eine Plattform
-          platforms.add(Platform(
-            x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
-            y: 125,
-            width: 200,
-            height: 25,
-            speed: placeSpeed,
-          ),);
-        } else {
-          // Erzeuge eine Lücke
-          gaps.add(Gap(
-            x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
-            y: 250,
-            width: 300,
-            height: 25,
-            speed: placeSpeed,
-          ),);
-        }
+        
+        LevelManager levelManager = LevelManager(screenWidth: screenWidth);
+        print("wir rufen ein level auf");
+        Level firstLevel = levelManager.getLevel(0);
+        obstacles = firstLevel.obstacles;
     }
       checkGap();
       checkPlatform();
