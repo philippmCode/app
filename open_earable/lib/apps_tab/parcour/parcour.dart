@@ -263,19 +263,6 @@ class ParcourState extends State<Parcour>
       ),
       body: Column(
         children: [
-          TabBar(
-            controller: _tabController,
-            // Color of the underline indicator
-            indicatorColor: Colors.white,
-            // Color of the active tab label
-            labelColor: Colors.white,
-            // Color of the inactive tab labels
-            unselectedLabelColor: Colors.grey,
-            tabs: [
-              Tab(text: 'Parcour'),
-              Tab(text: 'Height'),
-            ],
-          ),
         Expanded(
           child: (!widget.openEarable.bleManager.connected)
               ? EarableNotConnectedWarning()
@@ -315,7 +302,6 @@ class ParcourState extends State<Parcour>
       controller: _tabController,
       children: [
         ParcourChart(this, gameState, widget.openEarable, "Parcour"),
-        ParcourChart(this, gameState, widget.openEarable, "Height Data"),
       ],
     );
   }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:open_earable/apps_tab/parcour/level.dart';
 import 'package:open_earable/apps_tab/parcour/parcour.dart';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'package:flutter/material.dart';
@@ -35,23 +36,11 @@ class _ParcourChartState extends State<ParcourChart> {
   /// The subscription to the data.
   StreamSubscription? _dataSubscription;
 
-  /// The minimum x value of the chart.
-  late int _minX = 0;
-
-  /// The maximum x value of the chart.
-  late int _maxX = 0;
-
   /// The colors of the chart.
   late List<String> colors;
 
   /// The series of the chart.
   List<charts.Series<dynamic, num>> seriesList = [];
-
-  /// The minimum y value of the chart.
-  late double _minY;
-
-  /// The maximum y value of the chart.
-  late double _maxY;
 
   /// The error measure of the Kalman filter.
   final _errorMeasureAcc = 5.0;
@@ -97,8 +86,6 @@ class _ParcourChartState extends State<ParcourChart> {
     super.initState();
     _data = [];
     colors = _getColor(widget.title);
-    _minY = -25;
-    _maxY = 25;
     _setupListeners();
       player = Player(
         x: 150,
@@ -198,19 +185,10 @@ class _ParcourChartState extends State<ParcourChart> {
     setState(() {
       _data.add(value);
       _checkLength(_data);
-      DataValue? maxXYZValue = maxBy(_data, (DataValue b) => b.getMax());
       DataValue? minXYZValue = minBy(_data, (DataValue b) => b.getMin());
       if (minXYZValue == null) {
         return;
       }
-      double maxAbsValue =
-          max(maxXYZValue?.getMax().abs() ?? 0, minXYZValue.getMin().abs());
-      _maxY = maxAbsValue;
-
-      _minY = -maxAbsValue;
-      _maxX = value._timestamp;
-      _minX = _data[0]._timestamp;
-
     });
   }
 
@@ -278,41 +256,14 @@ class _ParcourChartState extends State<ParcourChart> {
       }
       obstacles.removeWhere((obstacle) => obstaclesToRemove.contains(obstacle));
 
-      double placeSpeed = 400.0;
       double screenWidth = MediaQuery.of(context).size.width; // Breite des Bildschirms
 
       if (obstacles.isEmpty && platforms.isEmpty && gaps.isEmpty) {
-        Random random = Random();
-        int choice = random.nextInt(3); // Zufällige Auswahl zwischen 0, 1 und 2
-
-        if (choice == 0) {
-          // Erzeuge ein Hindernis
-          obstacles.add(Obstacle(
-            x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
-            y: 200,
-            width: 50,
-            height: 50,
-            speed: placeSpeed,
-          ),);
-        } else if (choice == 1) {
-          // Erzeuge eine Plattform
-          platforms.add(Platform(
-            x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
-            y: 125,
-            width: 200,
-            height: 25,
-            speed: placeSpeed,
-          ),);
-        } else {
-          // Erzeuge eine Lücke
-          gaps.add(Gap(
-            x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
-            y: 250,
-            width: 300,
-            height: 25,
-            speed: placeSpeed,
-          ),);
-        }
+        
+        LevelManager levelManager = LevelManager(screenWidth: screenWidth);
+        print("wir rufen ein level auf");
+        Level firstLevel = levelManager.getLevel(0);
+        obstacles = firstLevel.obstacles;
     }
       checkGap();
       checkPlatform();
@@ -436,17 +387,7 @@ void _resetGame() {
 
   @override
   Widget build(BuildContext context) {
-  if (widget.title == "Height Data") {
-    seriesList = [
-      charts.Series<DataValue, int>(
-        id: 'Height (m)',
-        colorFn: (_, __) => charts.Color.fromHex(code: colors[0]),
-        domainFn: (DataValue data, _) => data._timestamp,
-        measureFn: (DataValue data, _) => (data as Jump)._height,
-        data: _data,
-      ),
-    ];
-  } else if (widget.title == "Parcour") {
+  
     ///print("parcour chart building");
     if (widget.gameState.isGameRunning) {
       double timeNow = widget.gameState.currentTime;
@@ -468,55 +409,9 @@ void _resetGame() {
         ],
       ),
     );
-  } else {
-    throw ArgumentError("Invalid tab title.");
   }
+}
 
-  return Column(
-    children: [
-      Padding(
-        padding: const EdgeInsets.all(8.0),
-      ),
-      Expanded(
-        child: charts.LineChart(
-          seriesList,
-          animate: false,
-          behaviors: [
-            charts.SeriesLegend(
-              position: charts.BehaviorPosition.bottom,
-              outsideJustification: charts.OutsideJustification.middleDrawArea,
-              horizontalFirst: false,
-              desiredMaxRows: 1,
-              entryTextStyle: charts.TextStyleSpec(
-                color: charts.Color(r: 255, g: 255, b: 255),
-                fontSize: 12,
-              ),
-            ),
-          ],
-          primaryMeasureAxis: charts.NumericAxisSpec(
-            renderSpec: charts.GridlineRendererSpec(
-              labelStyle: charts.TextStyleSpec(
-                fontSize: 14,
-                color: charts.MaterialPalette.white,
-              ),
-            ),
-            viewport: charts.NumericExtents(_minY, _maxY),
-          ),
-          domainAxis: charts.NumericAxisSpec(
-            renderSpec: charts.GridlineRendererSpec(
-              labelStyle: charts.TextStyleSpec(
-                fontSize: 14,
-                color: charts.MaterialPalette.white,
-              ),
-            ),
-            viewport: charts.NumericExtents(_minX, _maxX),
-          ),
-        ),
-      ),
-    ],
-  );
-}
-}
 
 /// A class representing a generic data value.
 abstract class DataValue {
