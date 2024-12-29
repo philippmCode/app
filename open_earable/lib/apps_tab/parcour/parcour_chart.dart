@@ -4,8 +4,6 @@ import 'package:open_earable/apps_tab/parcour/level.dart';
 import 'package:open_earable/apps_tab/parcour/parcour.dart';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:community_charts_flutter/community_charts_flutter.dart'
-    as charts;
 import 'package:simple_kalman/simple_kalman.dart';
 import 'package:collection/collection.dart';
 import 'dart:math';
@@ -36,12 +34,6 @@ class _ParcourChartState extends State<ParcourChart> {
   /// The subscription to the data.
   StreamSubscription? _dataSubscription;
 
-  /// The colors of the chart.
-  late List<String> colors;
-
-  /// The series of the chart.
-  List<charts.Series<dynamic, num>> seriesList = [];
-
   /// The error measure of the Kalman filter.
   final _errorMeasureAcc = 5.0;
 
@@ -53,9 +45,6 @@ class _ParcourChartState extends State<ParcourChart> {
 
   /// The Kalman filter for the z value.
   late SimpleKalman _kalmanZ;
-
-  /// The number of datapoints to display on the chart.
-  final int _numDatapoints = 200;
 
   /// The velocity of the device.
   double _velocity = 0.0;
@@ -86,7 +75,6 @@ class _ParcourChartState extends State<ParcourChart> {
     ///print("init von parcour_chart");
     super.initState();
     _data = [];
-    colors = _getColor(widget.title);
     double screenWidth = MediaQuery.of(context).size.width; // Breite des Bildschirms
     levelManager = LevelManager(screenWidth: screenWidth);
     _setupListeners();
@@ -187,7 +175,6 @@ class _ParcourChartState extends State<ParcourChart> {
   void _updateData(DataValue value) {
     setState(() {
       _data.add(value);
-      _checkLength(_data);
       DataValue? minXYZValue = minBy(_data, (DataValue b) => b.getMin());
       if (minXYZValue == null) {
         return;
@@ -195,32 +182,11 @@ class _ParcourChartState extends State<ParcourChart> {
     });
   }
 
-  /// Gets the color of the chart lines.
-  List<String> _getColor(String title) {
-    switch (title) {
-        case "Parcour":
-        // Blue, Orange, and Teal - Good for colorblindness
-        return ['#007bff', '#ff7f0e', '#2ca02c'];
-      case "Height Data":
-        // Blue, Orange, and Teal - Good for colorblindness
-        return ['#007bff', '#ff7f0e', '#2ca02c'];
-      default:
-        throw ArgumentError("Invalid tab title.");
-    }
-  }
-
 
   @override
   void dispose() {
     super.dispose();
     _dataSubscription?.cancel();
-  }
-
-  /// Checks the length of the data and removes the oldest data if it is too long.
-  void _checkLength(data) {
-    if (data.length > _numDatapoints) {
-      data.removeRange(0, data.length - _numDatapoints);
-    }
   }
 
 
@@ -271,14 +237,14 @@ class _ParcourChartState extends State<ParcourChart> {
           width: obstacle.width,
           height: obstacle.height,
           speed: obstacle.speed,
-        )).toList();
+        ),).toList();
         platforms = actualLevel.platforms.map((platform) => Platform(
           x: platform.x,
           y: platform.y,
           width: platform.width,
           height: platform.height,
           speed: platform.speed,
-        )).toList();
+        ),).toList();
         gaps = actualLevel.gaps.map((gap) => Gap(
           x: gap.x,
           y: gap.y,
@@ -427,7 +393,7 @@ void _resetGame() {
         children: [
           Expanded(
             child: CustomPaint(
-              painter: ParcourPainter(player: player, obstacles: obstacles, platforms: platforms, gaps: gaps),
+              painter: ParcourPainter(player: player, obstacles: obstacles, platforms: platforms, gaps: gaps, color: Theme.of(context).colorScheme.surface),
               child: Container(),
             ),
           ),
@@ -724,8 +690,9 @@ class ParcourPainter extends CustomPainter {
   final List<Obstacle> obstacles;
   final List<Platform> platforms;
   final List<Gap> gaps;
+  final Color color;
 
-  ParcourPainter({required this.player, required this.obstacles, required this.platforms, required this.gaps});
+  ParcourPainter({required this.player, required this.obstacles, required this.platforms, required this.gaps, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -766,7 +733,7 @@ class ParcourPainter extends CustomPainter {
     }
 
     //draw gaps
-    final gapPaint = Paint()..color = Colors.black;
+    final gapPaint = Paint()..color = color;
     for (var gap in gaps) {
       canvas.drawRect(gap.getRect(), gapPaint); 
     }

@@ -331,7 +331,7 @@ class ParcourState extends State<Parcour>
             : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: !_gameActive ? Colors.greenAccent : Colors.red,
-          foregroundColor: Colors.black,
+          foregroundColor: Theme.of(context).colorScheme.surface,
         ),
         child: Text(_gameActive ? 'Stop Jump' : 'Set Baseline & Start Game'),
       );
