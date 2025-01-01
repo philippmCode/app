@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:typed_data';
+import 'dart:ui';
 
+import 'package:flutter/services.dart';
 import 'package:open_earable/apps_tab/parcour/level.dart';
 import 'package:open_earable/apps_tab/parcour/parcour.dart';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
@@ -8,6 +11,7 @@ import 'package:simple_kalman/simple_kalman.dart';
 import 'package:collection/collection.dart';
 import 'dart:math';
 import 'dart:core';
+import 'dart:ui' as ui;
 
 /// class representing the ParcourChart
 class ParcourChart extends StatefulWidget {
@@ -69,10 +73,12 @@ class _ParcourChartState extends State<ParcourChart> {
   bool enteredPlatform = false;
   bool enteredGap = false;
   late LevelManager levelManager;
+  late ui.Image playerImage;
+  bool pictureLoaded = false;
 
   @override
   void initState() {
-    ///print("init von parcour_chart");
+    print("init von parcour_chart");
     super.initState();
     _data = [];
     double screenWidth = MediaQuery.of(context).size.width; // Breite des Bildschirms
@@ -85,6 +91,21 @@ class _ParcourChartState extends State<ParcourChart> {
         height: 50,
         groundLevel: 200,
     );
+    // Lade die Bilder
+    _loadImage('lib/apps_tab/parcour/assets/Player.jpeg').then((image) {
+      playerImage = image;
+      pictureLoaded = true;
+      print("Player image loaded: ${image.width}x${image.height}");
+    });
+  }
+
+  Future<ui.Image> _loadImage(String asset) async {
+    final ByteData data = await rootBundle.load(asset);
+    final Completer<ui.Image> completer = Completer();
+    ui.decodeImageFromList(Uint8List.view(data.buffer), (ui.Image img) {
+      completer.complete(img);
+    });
+    return completer.future;
   }
       
   /// Sets up the listeners for the data.
@@ -246,7 +267,7 @@ class _ParcourChartState extends State<ParcourChart> {
           width: gap.width,
           height: gap.height,
           speed: gap.speed,
-        )).toList();
+        ),).toList();
       }
       checkGap();
       checkPlatform();
@@ -374,8 +395,9 @@ void _resetGame() {
   @override
   Widget build(BuildContext context) {
   
-    ///print("parcour chart building");
+    print("parcour chart building");
     if (widget.gameState.isGameRunning) {
+      print("picture was loaded");
       double timeNow = widget.gameState.currentTime;
       //print("currentTime: $timeNow" "lastUpdateTime: ${widget.gameState.lastUpdateTime}");  
       double dt = timeNow - widget.gameState.lastUpdateTime;
@@ -383,19 +405,29 @@ void _resetGame() {
       //print("dt setzen: $dt");
       updateGame(dt);
     }
-    return Container(
-      child: Column(
-        children: [
-          Expanded(
-            child: CustomPaint(
-              painter: ParcourPainter(player: player, obstacles: obstacles, platforms: platforms, gaps: gaps, color: Theme.of(context).colorScheme.surface),
-              child: Container(),
+    return pictureLoaded
+        ? Container(
+            child: Column(
+              children: [
+                Expanded(
+                  child: CustomPaint(
+                    painter: ParcourPainter(
+                      player: player,
+                      obstacles: obstacles,
+                      platforms: platforms,
+                      gaps: gaps,
+                      color: Theme.of(context).colorScheme.surface,
+                      playerImage: playerImage, // Stelle sicher, dass playerImage nicht null ist
+                    ),
+                    child: Container(),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
-    );
+          )
+        : Container();
   }
+
 }
 
 
@@ -686,13 +718,21 @@ class ParcourPainter extends CustomPainter {
   final List<Platform> platforms;
   final List<Gap> gaps;
   final Color color;
+  final ui.Image playerImage;
 
-  ParcourPainter({required this.player, required this.obstacles, required this.platforms, required this.gaps, required this.color});
+  ParcourPainter({
+    required this.player,
+    required this.obstacles,
+    required this.platforms,
+    required this.gaps,
+    required this.color,
+    required this.playerImage,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     // 0-Linie zeichnen
-    ///print("painting");
+    print("painting");
     final zeroLinePaint = Paint()..color = Colors.black;
     canvas.drawLine(Offset(0, size.height / 2), Offset(size.width, size.height / 2), zeroLinePaint);
 
@@ -739,9 +779,14 @@ class ParcourPainter extends CustomPainter {
       canvas.drawRect(platform.getRect(), platformPaint);
     }
 
-    // draw player
-    final playerPaint = Paint()..color = Colors.yellow;
-    canvas.drawRect(player.getRect(), playerPaint);
+    // Spieler zeichnen
+    final playerRect = player.getRect();
+    canvas.drawImageRect(
+      playerImage,
+      Rect.fromLTWH(0, 0, playerImage.width.toDouble(), playerImage.height.toDouble()),
+      playerRect,
+      Paint(),
+    );
 
     // horizontal scale on x axis with 50px steps
     final horizontalLinePaint = Paint()..color = Colors.green;
