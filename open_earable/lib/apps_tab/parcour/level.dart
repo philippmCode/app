@@ -1,4 +1,6 @@
-import 'package:open_earable/apps_tab/parcour/parcour_chart.dart';
+import 'package:open_earable/apps_tab/parcour/gap.dart';
+import 'package:open_earable/apps_tab/parcour/obstacle.dart';
+import 'package:open_earable/apps_tab/parcour/platform.dart';
 
 class LevelManager {
 
