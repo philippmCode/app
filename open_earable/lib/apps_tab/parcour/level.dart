@@ -50,6 +50,7 @@ class LevelManager {
 
   void reset() {
     levelId = 0;
+    scenarioId = 0;
   }
 }
 

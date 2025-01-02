@@ -381,7 +381,7 @@ class _ParcourChartState extends State<ParcourChart> {
   // Beispiel: Zeige eine Nachricht an und setze den Spielzustand zurück
     print("collision detected");
     levelManager.reset();
-    widget.parcourState.stopGame();
+    widget.gameState.endGameState();
     widget.gameState.lastUpdateTime = 0.0; // set the time back
     obstacles.clear(); // clear the obstacles
     platforms.clear(); // clear the platforms
@@ -460,16 +460,20 @@ void _resetGame() {
             ],
           ),
           if (showLevelText) 
-            Center(
-              child: Container(
-                padding: EdgeInsets.all(16.0),
-                color: Colors.black54,
-                child: Text(
-                  levelText,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24.0,
-                    fontWeight: FontWeight.bold,
+            Align(
+              alignment: Alignment.topCenter, // Positioniere den Text oben
+              child: Padding(
+                padding: const EdgeInsets.only(top: 20.0), // Verschiebe den Text nach unten
+                child: Container(
+                  padding: EdgeInsets.all(16.0),
+                  color: Colors.black54,
+                  child: Text(
+                    levelText,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24.0,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),

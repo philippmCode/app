@@ -39,15 +39,17 @@ class GameState {
   }
 
   void startGameState() {
-    //print("starten das Game");
+    initializeTimer();
+    print("starten das Game");
     isGameRunning = true;
+    distance = 0;
   }
 
   double getCurrentTime() {
     return DateTime.now().millisecondsSinceEpoch / 1000.0;
   }
 
-  void stopGameState() {
+  void endGameState() {
     if (distance > highScore) {
       highScore = distance;
     }
@@ -148,7 +150,6 @@ class ParcourState extends State<Parcour>
   void _startGame() {
     print("Starting game");
 
-    gameState.initializeTimer();
     gameState.startGameState();
 
     setState(() {
@@ -157,18 +158,6 @@ class ParcourState extends State<Parcour>
       _currentHeight = 0.0;
       _velocity = 0.0;
     });
-  }
-
-  /// Ends the game
-  void stopGame() {
-    print("Stopping game");
-    if (_gameActive) {
-      gameState.stopGameState();
-      setState(() {
-        _gameActive = false;
-        gameState.stopGameState();
-      });
-    }
   }
 
   /// Initializes Kalman filters for accelerometer data.
@@ -311,17 +300,17 @@ class ParcourState extends State<Parcour>
   /// Builds buttons to start and stop the jump height measurement process.
   Widget _buildButtons() {
     return ElevatedButton(
-        onPressed: _earableConnected
-            ? () {
-                _gameActive ? stopGame() : _startGame();
-              }
-            : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: !_gameActive ? Colors.greenAccent : Colors.red,
-          foregroundColor: Theme.of(context).colorScheme.surface,
-        ),
-        child: Text(_gameActive ? 'Stop Jump' : 'Set Baseline & Start Game'),
-      );
+      onPressed: _earableConnected && !_gameActive
+          ? () {
+              _startGame();
+            }
+          : null,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.greenAccent,
+        foregroundColor: Theme.of(context).colorScheme.surface,
+      ),
+      child: Text('Start Game'),
+    );
   }
 
   /// Builds a sensor configuration for the OpenEarable device.
