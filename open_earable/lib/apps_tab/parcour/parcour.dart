@@ -25,8 +25,8 @@ class GameState {
   bool isGameRunning = false;
   double lastUpdateTime = 0.0;
   double currentTime = 0.0;
-  int obstaclesOvercome = 0;
-  int highScore = 0;
+  double distance = 0;
+  double highScore = 0;
 
   void initializeTimer() {
     lastUpdateTime = 0.0;
@@ -48,10 +48,10 @@ class GameState {
   }
 
   void stopGameState() {
-    if (obstaclesOvercome > highScore) {
-      highScore = obstaclesOvercome;
+    if (distance > highScore) {
+      highScore = distance;
     }
-    obstaclesOvercome = 0;
+    distance = 0;
     isGameRunning = false;
     timer.cancel();
   }
@@ -297,11 +297,11 @@ class ParcourState extends State<Parcour>
     return Column(
       children: [
         Text(
-          'Obstacles overcome: ${gameState.obstaclesOvercome}',
+          'Current distance: ${gameState.distance.toStringAsFixed(2)} m',
           style: Theme.of(context).textTheme.headlineMedium,
         ),
         Text(
-          'Current High Score: ${gameState.highScore}',
+          'High Score: ${gameState.highScore.toStringAsFixed(2)} m',
           style: Theme.of(context).textTheme.headlineMedium,
         ),
       ],

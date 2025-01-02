@@ -8,6 +8,7 @@ import 'package:open_earable/apps_tab/parcour/obstacle.dart';
 import 'package:open_earable/apps_tab/parcour/parcour.dart';
 import 'package:open_earable/apps_tab/parcour/player.dart';
 import 'package:open_earable/apps_tab/parcour/platform.dart';
+import 'package:open_earable/apps_tab/parcour/scenario.dart';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:simple_kalman/simple_kalman.dart';
@@ -78,6 +79,9 @@ class _ParcourChartState extends State<ParcourChart> {
   late LevelManager levelManager;
   late ui.Image playerImage;
   bool pictureLoaded = false;
+  bool showLevelText = false;
+  String levelText = "";
+  double progress = 0.0;
 
   @override
   void initState() {
@@ -88,7 +92,7 @@ class _ParcourChartState extends State<ParcourChart> {
     levelManager = LevelManager(screenWidth: screenWidth);
     _setupListeners();
       player = Player(
-        x: 150,
+        x: 200,
         y: 200,
         width: 50,
         height: 50,
@@ -239,39 +243,59 @@ class _ParcourChartState extends State<ParcourChart> {
         obstacle.update(dt);
         if (obstacle.x < -obstacle.width) {
           obstaclesToRemove.add(obstacle); // Füge das Hindernis zur Liste der zu entfernenden Hindernisse hinzu
-          widget.gameState.obstaclesOvercome++; // Erhöhe den Zähler
         }
       }
       obstacles.removeWhere((obstacle) => obstaclesToRemove.contains(obstacle));
+
+      //update the distance the player has covered
+      widget.gameState.distance += (levelManager.getLevelSpeed() / 100) * dt;
 
       if (obstacles.isEmpty && platforms.isEmpty && gaps.isEmpty) {
         
         print("wir rufen ein level auf");
         
-        Level actualLevel = levelManager.getLevel();
-        print("actualLevel: ${actualLevel.name}");
-        obstacles = actualLevel.obstacles.map((obstacle) => Obstacle(
+        Scenario actualScenario = levelManager.getScenario();
+        print("actualScenario: ${actualScenario.name}");
+        obstacles = actualScenario.obstacles.map((obstacle) => Obstacle(
           x: obstacle.x,
           y: obstacle.y,
           width: obstacle.width,
           height: obstacle.height,
           speed: obstacle.speed,
         ),).toList();
-        platforms = actualLevel.platforms.map((platform) => Platform(
+        platforms = actualScenario.platforms.map((platform) => Platform(
           x: platform.x,
           y: platform.y,
           width: platform.width,
           height: platform.height,
           speed: platform.speed,
         ),).toList();
-        gaps = actualLevel.gaps.map((gap) => Gap(
+        gaps = actualScenario.gaps.map((gap) => Gap(
           x: gap.x,
           y: gap.y,
           width: gap.width,
           height: gap.height,
           speed: gap.speed,
         ),).toList();
+
+        if (levelManager.getNewLevel()) {
+              // Zeige den Level-Text an
+            setState(() {
+              showLevelText = true;
+              levelText = "Level ${levelManager.levelId + 1}";
+            });
+
+            // Blende den Level-Text nach 1 Sekunde aus
+            Timer(Duration(seconds: 1), () {
+              setState(() {
+                showLevelText = false;
+              });
+            });
+        }
       }
+      setState(() {
+        progress = (levelManager.scenarioId - 1 / levelManager.levels[levelManager.levelId].scenarios.length);
+      });
       checkGap();
       checkPlatform();
       checkCollisions();
@@ -409,28 +433,48 @@ void _resetGame() {
       updateGame(dt);
     }
     return pictureLoaded
-        ? Container(
-            child: Column(
-              children: [
-                Expanded(
-                  child: CustomPaint(
-                    painter: ParcourPainter(
-                      player: player,
-                      obstacles: obstacles,
-                      platforms: platforms,
-                      gaps: gaps,
-                      color: Theme.of(context).colorScheme.surface,
-                      playerImage: playerImage, // Stelle sicher, dass playerImage nicht null ist
-                    ),
-                    child: Container(),
+        ? Stack(
+        children: [
+          Column(
+            children: [
+              Expanded(
+                child: CustomPaint(
+                  painter: ParcourPainter(
+                    player: player,
+                    obstacles: obstacles,
+                    platforms: platforms,
+                    gaps: gaps,
+                    color: Theme.of(context).colorScheme.surface,
+                    playerImage: playerImage,
+                  ),
+                  child: Container(),
+                ),
+              ),
+              LinearProgressIndicator(
+                value: progress,
+                backgroundColor: Colors.grey,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+              ),
+            ],
+          ),
+          if (showLevelText) 
+            Center(
+              child: Container(
+                padding: EdgeInsets.all(16.0),
+                color: Colors.black54,
+                child: Text(
+                  levelText,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24.0,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ],
+              ),
             ),
-          )
-        : Container();
+        ],
+      ): Center(child: CircularProgressIndicator());
   }
-
 }
 
 
