@@ -294,7 +294,8 @@ class _ParcourChartState extends State<ParcourChart> {
         }
       }
       setState(() {
-        progress = (levelManager.scenarioId - 1 / levelManager.levels[levelManager.levelId].scenarios.length);
+        print("levelManager.scenarioId: ${levelManager.scenarioId}");
+        progress = ((levelManager.scenarioId -1) / levelManager.levels[levelManager.levelId].scenarios.length);
       });
       checkGap();
       checkPlatform();
@@ -385,6 +386,7 @@ class _ParcourChartState extends State<ParcourChart> {
     obstacles.clear(); // clear the obstacles
     platforms.clear(); // clear the platforms
     gaps.clear(); // clear the gaps
+    progress = 0.0; // reset the progress
   showDialog(
     context: context,
     builder: (BuildContext context) {
