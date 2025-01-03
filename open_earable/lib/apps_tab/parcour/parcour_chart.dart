@@ -82,6 +82,7 @@ class _ParcourChartState extends State<ParcourChart> {
   bool showLevelText = false;
   String levelText = "";
   double progress = 0.0;
+  double distanceAtLevelStart = 0.0;
 
   @override
   void initState() {
@@ -278,7 +279,9 @@ class _ParcourChartState extends State<ParcourChart> {
         ),).toList();
 
         if (levelManager.getNewLevel()) {
-              // Zeige den Level-Text an
+            
+            // Zeige den Level-Text an
+            distanceAtLevelStart = widget.gameState.distance;
             setState(() {
               showLevelText = true;
               levelText = "Level ${levelManager.levelId + 1}";
@@ -381,6 +384,7 @@ class _ParcourChartState extends State<ParcourChart> {
     print("collision detected");
     levelManager.reset();
     widget.gameState.endGameState();
+    widget.gameState.distance = distanceAtLevelStart; // set the distance back
     widget.gameState.lastUpdateTime = 0.0; // set the time back
     obstacles.clear(); // clear the obstacles
     platforms.clear(); // clear the platforms

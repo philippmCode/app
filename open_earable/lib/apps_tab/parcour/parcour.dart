@@ -42,7 +42,6 @@ class GameState {
     initializeTimer();
     print("starten das Game");
     isGameRunning = true;
-    distance = 0;
   }
 
   void pauseGame() {
@@ -58,7 +57,6 @@ class GameState {
     if (distance > highScore) {
       highScore = distance;
     }
-    distance = 0;
     isGameRunning = false;
     timer.cancel();
   }
