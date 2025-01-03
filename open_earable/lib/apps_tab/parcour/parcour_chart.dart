@@ -109,9 +109,7 @@ class _ParcourChartState extends State<ParcourChart> {
   Future<ui.Image> _loadImage(String asset) async {
     final ByteData data = await rootBundle.load(asset);
     final Completer<ui.Image> completer = Completer();
-    ui.decodeImageFromList(Uint8List.view(data.buffer), (ui.Image img) {
-      completer.complete(img);
-    });
+    ui.decodeImageFromList(Uint8List.view(data.buffer), completer.complete);
     return completer.future;
   }
       

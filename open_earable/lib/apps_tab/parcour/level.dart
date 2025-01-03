@@ -29,6 +29,9 @@ class LevelManager {
       }
       scenarioId = 0;
     }
+    else if (scenarioId == 0) {
+      newLevel = true;
+    }
     else {
       newLevel = false;
     }
@@ -49,7 +52,7 @@ class LevelManager {
   }
 
   void reset() {
-    levelId = 0;
+    // so that the player restarts in his actual level
     scenarioId = 0;
   }
 }

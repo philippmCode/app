@@ -301,9 +301,7 @@ class ParcourState extends State<Parcour>
   Widget _buildButtons() {
     return ElevatedButton(
       onPressed: _earableConnected && !_gameActive
-          ? () {
-              _startGame();
-            }
+          ? _startGame
           : null,
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.greenAccent,
