@@ -12,7 +12,7 @@ class Player {
   double gravity;
   double groundLevel;
   double jumpHeight;
-  double startingHeight = 250;
+  double startingHeight = 300;
   bool enteredPlatform = false;
   Platform? platform;
   bool enteredGap = false;

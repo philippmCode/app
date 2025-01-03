@@ -93,10 +93,10 @@ class _ParcourChartState extends State<ParcourChart> {
     _setupListeners();
       player = Player(
         x: 275,
-        y: 250,
+        y: 300,
         width: 50,
         height: 50,
-        groundLevel: 250,
+        groundLevel: 300,
     );
     // Lade die Bilder
     _loadImage('lib/apps_tab/parcour/assets/Player.jpeg').then((image) {
@@ -411,10 +411,10 @@ void _resetGame() {
     //print("resetting game");
     player = Player(
       x: 275,
-      y: 250,
+      y: 300,
       width: 50,
       height: 50,
-      groundLevel: 250,
+      groundLevel: 300,
     );
     widget.gameState.startGameState(); // restart the game
   });
