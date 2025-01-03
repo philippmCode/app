@@ -45,8 +45,13 @@ class GameState {
     distance = 0;
   }
 
-  double getCurrentTime() {
-    return DateTime.now().millisecondsSinceEpoch / 1000.0;
+  void pauseGame() {
+    isGameRunning = false;
+  }
+
+  void resumeGame() {
+    lastUpdateTime = currentTime;
+    isGameRunning = true;
   }
 
   void endGameState() {
@@ -106,6 +111,8 @@ class ParcourState extends State<Parcour>
   /// Pitch angle in radians.
   double _pitch = 0.0;
 
+  bool _pausedGame = false;
+
   /// Initializes state and sets up listeners for sensor data.
   @override
   void initState() {
@@ -157,6 +164,24 @@ class ParcourState extends State<Parcour>
       _gameActive = true;
       _currentHeight = 0.0;
       _velocity = 0.0;
+    });
+  }
+
+  void pauseGame() {
+    print("Pausing game");
+    gameState.pauseGame();
+    _pausedGame = true;
+    setState(() {
+      _pausedGame = true;
+    });
+  }
+
+  void resumeGame() {
+    print("Resuming game in parcour");
+    gameState.resumeGame();
+    _pausedGame = false;
+    setState(() {
+      _pausedGame = false;
     });
   }
 
@@ -297,19 +322,35 @@ class ParcourState extends State<Parcour>
     );
   }
 
-  /// Builds buttons to start and stop the jump height measurement process.
   Widget _buildButtons() {
     return ElevatedButton(
-      onPressed: _earableConnected && !_gameActive
-          ? _startGame
+      onPressed: _earableConnected
+          ? () {
+              if (!_gameActive) {
+                _startGame(); // Spiel starten
+              } else if (_pausedGame) {
+                resumeGame(); // Spiel fortsetzen
+              } else {
+                pauseGame(); // Spiel pausieren
+              }
+            }
           : null,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.greenAccent,
+        backgroundColor: !_gameActive
+            ? Colors.greenAccent // Start
+            : _pausedGame
+                ? Colors.green // Pausiert
+                : Colors.red, // Aktiv
         foregroundColor: Theme.of(context).colorScheme.surface,
       ),
-      child: Text('Start Game'),
+      child: Text(!_gameActive
+          ? 'Set Baseline & Start Game'
+          : _pausedGame
+              ? 'Resume Game'
+              : 'Pause Game'),
     );
   }
+
 
   /// Builds a sensor configuration for the OpenEarable device.
   /// Sets the sensor ID, sampling rate, and latency.

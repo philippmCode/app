@@ -212,8 +212,9 @@ class _ParcourChartState extends State<ParcourChart> {
 
 
   void updateGame(double dt) {
+
     if (!widget.gameState.isGameRunning) return; // Verhindere weitere Updates, wenn das Spiel gestoppt wurde
-    //print("updating game");
+    print("updating game");
     setState(() {
 
       player.update(dt);
