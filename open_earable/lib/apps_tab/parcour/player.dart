@@ -121,7 +121,7 @@ class Player {
 
     print("enteredGap: $enteredGap, y: $y, groundLevel: $groundLevel, gapHeight: ${gap?.height}");
     print(enteredGap && y == groundLevel + (gap?.height ?? 0));
-    if (y == groundLevel || (enteredGap && y == groundLevel - (gap?.height ?? 0)) || enteredPlatform) {
+    if (y == groundLevel || (enteredGap && y == groundLevel + (gap?.height ?? 0)) || enteredPlatform) {
       return true;
     }
     return false;

@@ -71,12 +71,12 @@ class Level {
 
 List<Level> _predefinedLevels(double screenWidth) => [
   Level(
-    id: 1,
+    id: 0,
     scenarios: [_predefinedScenarios(screenWidth)[0], _predefinedScenarios(screenWidth)[1]],
     speed: 300,
-  ),
+    ),
   Level(
-    id: 2,
+    id: 1,
     scenarios: [_predefinedScenarios(screenWidth)[2], _predefinedScenarios(screenWidth)[3]],
     speed: 300,
     ),
