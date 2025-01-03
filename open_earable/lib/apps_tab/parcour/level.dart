@@ -90,14 +90,14 @@ List<Scenario> _predefinedScenarios(double screenWidth) => [
     obstacles: [
       Obstacle(
           x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
-          y: 200,
+          y: 250,
           width: 50,
           height: 50,
           speed: 300,
         ),
       Obstacle(
           x: screenWidth + 100,
-          y: 200,
+          y: 250,
           width: 50,
           height: 50,
           speed: 300,
@@ -113,7 +113,7 @@ List<Scenario> _predefinedScenarios(double screenWidth) => [
     obstacles: [
       Obstacle(
           x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
-          y: 200,
+          y: 250,
           width: 50,
           height: 50,
           speed: 300,
@@ -129,7 +129,7 @@ List<Scenario> _predefinedScenarios(double screenWidth) => [
     obstacles: [],
     platforms: [],
     gaps: [
-      Gap(x: screenWidth, y: 250, width: 400, height: 50, speed: 300),
+      Gap(x: screenWidth, y: 300, width: 400, height: 50, speed: 300),
   ],
   screenWidth: screenWidth,
   ),
@@ -138,7 +138,7 @@ List<Scenario> _predefinedScenarios(double screenWidth) => [
     length: 3000,
     obstacles: [],
     platforms: [
-      Platform(x: screenWidth, y: 100, width: 300, height: 25, speed: 300),
+      Platform(x: screenWidth, y: 200, width: 300, height: 25, speed: 300),
   ],
   gaps: [],
   screenWidth: screenWidth,

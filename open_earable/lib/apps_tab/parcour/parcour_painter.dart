@@ -34,7 +34,7 @@ class ParcourPainter extends CustomPainter {
     // Zeichne die Fläche unter der 0-Linie grün
     final greenPaint = Paint()..color = Colors.green;
     canvas.drawRect(
-      Rect.fromLTRB(0, 250, size.width, size.height),
+      Rect.fromLTRB(0, 300, size.width, size.height),
       greenPaint,
     );
 

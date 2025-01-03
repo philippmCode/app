@@ -12,7 +12,7 @@ class Player {
   double gravity;
   double groundLevel;
   double jumpHeight;
-  double startingHeight = 200;
+  double startingHeight = 250;
   bool enteredPlatform = false;
   Platform? platform;
   bool enteredGap = false;
@@ -81,8 +81,6 @@ class Player {
     } 
     else if (enteredPlatform) {
 
-        print("platform height: ${platform!.y}");
-        print("rechnung: ${platform!.y - height}");
         double movement = jumpHeight * dt;
         if (y + movement < platform!.y - height) {
           print("move player back to platform");
@@ -111,7 +109,7 @@ class Player {
     print("calling jump");
     if (!isJumping) {
       isJumping = true;
-      jumpHeight = 3.5 * height;
+      jumpHeight = 3 * height;
       startingHeight = y;
       print("startingHeight: $startingHeight");
       ///print('Jump initiated to height: $targetHeight'); // Debug-Ausgabe der Sprunggeschwindigkeit
