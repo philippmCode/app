@@ -183,7 +183,7 @@ class _ParcourChartState extends State<ParcourChart> {
     // Prevent height from going negative.
     _height = max(0, _height);
 
-    if (_height > 0.1) {
+    if (_height > 0.1 && player.hasGroundContanct()) {
       player.jump();
     }
 

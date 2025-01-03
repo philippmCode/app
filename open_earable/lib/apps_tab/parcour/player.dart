@@ -116,6 +116,17 @@ class Player {
     }
   }
 
+  // check if player is in contact with the ground to prevent double jumps
+  bool hasGroundContanct() {
+
+    print("enteredGap: $enteredGap, y: $y, groundLevel: $groundLevel, gapHeight: ${gap?.height}");
+    print(enteredGap && y == groundLevel + (gap?.height ?? 0));
+    if (y == groundLevel || (enteredGap && y == groundLevel - (gap?.height ?? 0)) || enteredPlatform) {
+      return true;
+    }
+    return false;
+  }
+
   Rect getRect() {
     return Rect.fromLTWH(x, y, width, height);
   }
