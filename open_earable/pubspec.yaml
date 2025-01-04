@@ -124,6 +124,7 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
     - assets/
+    - lib/apps_tab/parcour/assets/
     - lib/apps_tab/powernapper/assets/
     - lib/apps_tab/recorder/assets/
     - lib/apps_tab/posture_tracker/assets/

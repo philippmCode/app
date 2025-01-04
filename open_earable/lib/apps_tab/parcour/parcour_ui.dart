@@ -1,16 +1,24 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart';
+import 'package:open_earable/apps_tab/parcour/parcour_painter.dart';
+import 'package:open_earable/apps_tab/parcour/gap.dart';
 import 'package:open_earable/apps_tab/parcour/level.dart';
+import 'package:open_earable/apps_tab/parcour/obstacle.dart';
 import 'package:open_earable/apps_tab/parcour/parcour.dart';
+import 'package:open_earable/apps_tab/parcour/player.dart';
+import 'package:open_earable/apps_tab/parcour/platform.dart';
+import 'package:open_earable/apps_tab/parcour/scenario.dart';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:simple_kalman/simple_kalman.dart';
 import 'package:collection/collection.dart';
 import 'dart:math';
 import 'dart:core';
+import 'dart:ui' as ui;
 
 /// class representing the ParcourChart
-class ParcourChart extends StatefulWidget {
+class ParcourUI extends StatefulWidget {
 
   final OpenEarable openEarable;
   final GameState gameState;
@@ -20,14 +28,14 @@ class ParcourChart extends StatefulWidget {
   final String title;
 
   /// Constructs a ParcourChart object with a title, openEarable, gameState, and parcourState.
-  const ParcourChart(this.parcourState, this.gameState, this.openEarable, this.title, {super.key});
+  const ParcourUI(this.parcourState, this.gameState, this.openEarable, this.title, {super.key});
 
   @override
-  State<ParcourChart> createState() => _ParcourChartState();
+  State<ParcourUI> createState() => _ParcourUIState();
 }
 
 /// A class representing the state of a ParcourChart.
-class _ParcourChartState extends State<ParcourChart> {
+class _ParcourUIState extends State<ParcourUI> {
   /// The data of the chart.
   late List<DataValue> _data;
 
@@ -69,22 +77,41 @@ class _ParcourChartState extends State<ParcourChart> {
   bool enteredPlatform = false;
   bool enteredGap = false;
   late LevelManager levelManager;
+  late ui.Image playerImage;
+  bool pictureLoaded = false;
+  bool showLevelText = false;
+  String levelText = "";
+  double progress = 0.0;
+  double distanceAtLevelStart = 0.0;
 
   @override
   void initState() {
-    ///print("init von parcour_chart");
+    print("init von parcour_chart");
     super.initState();
     _data = [];
     double screenWidth = MediaQuery.of(context).size.width; // Breite des Bildschirms
     levelManager = LevelManager(screenWidth: screenWidth);
     _setupListeners();
       player = Player(
-        x: 150,
-        y: 200,
+        x: 275,
+        y: 300,
         width: 50,
         height: 50,
-        groundLevel: 200,
+        groundLevel: 300,
     );
+    // Lade die Bilder
+    _loadImage('lib/apps_tab/parcour/assets/Player.jpeg').then((image) {
+      playerImage = image;
+      pictureLoaded = true;
+      print("Player image loaded: ${image.width}x${image.height}");
+    });
+  }
+
+  Future<ui.Image> _loadImage(String asset) async {
+    final ByteData data = await rootBundle.load(asset);
+    final Completer<ui.Image> completer = Completer();
+    ui.decodeImageFromList(Uint8List.view(data.buffer), completer.complete);
+    return completer.future;
   }
       
   /// Sets up the listeners for the data.
@@ -157,7 +184,7 @@ class _ParcourChartState extends State<ParcourChart> {
     // Prevent height from going negative.
     _height = max(0, _height);
 
-    if (_height > 0.1) {
+    if (_height > 0.1 && player.hasGroundContanct()) {
       player.jump();
     }
 
@@ -186,8 +213,9 @@ class _ParcourChartState extends State<ParcourChart> {
 
 
   void updateGame(double dt) {
+
     if (!widget.gameState.isGameRunning) return; // Verhindere weitere Updates, wenn das Spiel gestoppt wurde
-    //print("updating game");
+    print("updating game");
     setState(() {
 
       player.update(dt);
@@ -215,39 +243,62 @@ class _ParcourChartState extends State<ParcourChart> {
         obstacle.update(dt);
         if (obstacle.x < -obstacle.width) {
           obstaclesToRemove.add(obstacle); // Füge das Hindernis zur Liste der zu entfernenden Hindernisse hinzu
-          widget.gameState.obstaclesOvercome++; // Erhöhe den Zähler
         }
       }
       obstacles.removeWhere((obstacle) => obstaclesToRemove.contains(obstacle));
+
+      //update the distance the player has covered
+      widget.gameState.distance += (levelManager.getLevelSpeed() / 100) * dt;
 
       if (obstacles.isEmpty && platforms.isEmpty && gaps.isEmpty) {
         
         print("wir rufen ein level auf");
         
-        Level actualLevel = levelManager.getLevel();
-        print("actualLevel: ${actualLevel.name}");
-        obstacles = actualLevel.obstacles.map((obstacle) => Obstacle(
+        Scenario actualScenario = levelManager.getScenario();
+        print("actualScenario: ${actualScenario.name}");
+        obstacles = actualScenario.obstacles.map((obstacle) => Obstacle(
           x: obstacle.x,
           y: obstacle.y,
           width: obstacle.width,
           height: obstacle.height,
           speed: obstacle.speed,
         ),).toList();
-        platforms = actualLevel.platforms.map((platform) => Platform(
+        platforms = actualScenario.platforms.map((platform) => Platform(
           x: platform.x,
           y: platform.y,
           width: platform.width,
           height: platform.height,
           speed: platform.speed,
         ),).toList();
-        gaps = actualLevel.gaps.map((gap) => Gap(
+        gaps = actualScenario.gaps.map((gap) => Gap(
           x: gap.x,
           y: gap.y,
           width: gap.width,
           height: gap.height,
           speed: gap.speed,
-        )).toList();
+        ),).toList();
+
+        if (levelManager.getNewLevel()) {
+            
+            // Zeige den Level-Text an
+            distanceAtLevelStart = widget.gameState.distance;
+            setState(() {
+              showLevelText = true;
+              levelText = "Level ${levelManager.levelId + 1 + levelManager.roundtTrips*levelManager.levels.length}";
+            });
+
+            // Blende den Level-Text nach 1 Sekunde aus
+            Timer(Duration(seconds: 1), () {
+              setState(() {
+                showLevelText = false;
+              });
+            });
+        }
       }
+      setState(() {
+        print("levelManager.scenarioId: ${levelManager.scenarioId}");
+        progress = ((levelManager.scenarioId -1) / levelManager.levels[levelManager.levelId].scenarios.length);
+      });
       checkGap();
       checkPlatform();
       checkCollisions();
@@ -332,17 +383,19 @@ class _ParcourChartState extends State<ParcourChart> {
   // Beispiel: Zeige eine Nachricht an und setze den Spielzustand zurück
     print("collision detected");
     levelManager.reset();
-    widget.parcourState.stopGame();
+    widget.gameState.endGameState();
+    widget.gameState.distance = distanceAtLevelStart; // set the distance back
     widget.gameState.lastUpdateTime = 0.0; // set the time back
     obstacles.clear(); // clear the obstacles
     platforms.clear(); // clear the platforms
     gaps.clear(); // clear the gaps
+    progress = 0.0; // reset the progress
   showDialog(
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: Text("Kollision erkannt!"),
-        content: Text("Das Spiel wird neu gestartet."),
+        title: Text("Collision detected!"),
+        content: Text("Try again!"),
         actions: [
           TextButton(
             onPressed: () {
@@ -361,11 +414,11 @@ void _resetGame() {
   setState(() {
     //print("resetting game");
     player = Player(
-      x: 200,
-      y: 200,
+      x: 275,
+      y: 300,
       width: 50,
       height: 50,
-      groundLevel: 200,
+      groundLevel: 300,
     );
     widget.gameState.startGameState(); // restart the game
   });
@@ -374,8 +427,9 @@ void _resetGame() {
   @override
   Widget build(BuildContext context) {
   
-    ///print("parcour chart building");
+    print("parcour chart building");
     if (widget.gameState.isGameRunning) {
+      print("picture was loaded");
       double timeNow = widget.gameState.currentTime;
       //print("currentTime: $timeNow" "lastUpdateTime: ${widget.gameState.lastUpdateTime}");  
       double dt = timeNow - widget.gameState.lastUpdateTime;
@@ -383,18 +437,52 @@ void _resetGame() {
       //print("dt setzen: $dt");
       updateGame(dt);
     }
-    return Container(
-      child: Column(
+    return pictureLoaded
+        ? Stack(
         children: [
-          Expanded(
-            child: CustomPaint(
-              painter: ParcourPainter(player: player, obstacles: obstacles, platforms: platforms, gaps: gaps, color: Theme.of(context).colorScheme.surface),
-              child: Container(),
-            ),
+          Column(
+            children: [
+              Expanded(
+                child: CustomPaint(
+                  painter: ParcourPainter(
+                    player: player,
+                    obstacles: obstacles,
+                    platforms: platforms,
+                    gaps: gaps,
+                    color: Theme.of(context).colorScheme.surface,
+                    playerImage: playerImage,
+                  ),
+                  child: Container(),
+                ),
+              ),
+              LinearProgressIndicator(
+                value: progress,
+                backgroundColor: Colors.grey,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+              ),
+            ],
           ),
+          if (showLevelText) 
+            Align(
+              alignment: Alignment.topCenter, // Positioniere den Text oben
+              child: Padding(
+                padding: const EdgeInsets.only(top: 20.0), // Verschiebe den Text nach unten
+                child: Container(
+                  padding: EdgeInsets.all(16.0),
+                  color: Colors.black54,
+                  child: Text(
+                    levelText,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24.0,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
-      ),
-    );
+      ): Center(child: CircularProgressIndicator());
   }
 }
 
@@ -482,282 +570,5 @@ class Jump extends DataValue {
   @override
   String toString() {
     return "timestamp: ${_time.millisecondsSinceEpoch}\nheight $_height";
-  }
-}
-
-class Platform {
-  double x;
-  double y;
-  double width;
-  double height;
-  double speed;
-
-  Platform({
-    required this.x,
-    required this.y,
-    required this.width,
-    required this.height,
-    required this.speed,
-  });
-
-  void update(double dt) {
-    x -= speed * dt;
-  }
-
-  Rect getRect() {
-    return Rect.fromLTWH(x, y, width, height);
-  }
-}
-
-class Gap {
-  double x;
-  double y;
-  double width;
-  double height;
-  double speed;
-
-  Gap({
-    required this.x,
-    required this.y,
-    required this.width,
-    required this.height,
-    required this.speed,
-  });
-
-  void update(double dt) {
-    x -= speed * dt;
-  }
-
-  Rect getRect() {
-    return Rect.fromLTWH(x, y, width, height);
-  }
-}
-
-class Player {
-  double x;
-  double y;
-  double width;
-  double height;
-  bool isJumping;
-  double gravity;
-  double groundLevel;
-  double jumpHeight;
-  bool enteredPlatform = false;
-  Platform? platform;
-  bool enteredGap = false;
-  Gap? gap;
-
-  Player({
-    required this.x,
-    required this.y,
-    required this.width,
-    required this.height,
-    this.isJumping = false,
-    this.jumpHeight = 0.0,
-    this.gravity = 9.8,
-    required this.groundLevel,
-  });
-
-  void enterGap(Gap gap) {
-    print("player entered gap");
-    enteredGap = true;
-    this.gap = gap;
-  }
-
-  void leaveGap() {
-    print("player left gap");
-    enteredGap = false;
-    gap = null;
-  }
-
-  void enterPlatform(Platform platform) {
-    print("player entered platform");
-    enteredPlatform = true;
-    this.platform = platform;
-    isJumping = false;
-  }
-
-  void leavePlatform() {
-    print("player left platform");
-    enteredPlatform = false;
-    platform = null;
-  }
-
-  void sinkdown(double dt, double targetHeight) {
-
-    print("targetHeight: $targetHeight");
-    double movement = targetHeight * dt;
-    if (y + movement < targetHeight) {
-      y += movement; // move player back towards the ground
-    }
-    else {
-      y = targetHeight;
-    }
-  }
-
-  void riseUp(double dt) {
-
-    y -= (jumpHeight) * dt; // move player towards target height
-
-    // check if player reached target height
-    if (y <= groundLevel - jumpHeight) {
-      y = groundLevel - jumpHeight;
-      isJumping = false;
-    }
-  }
-
-  void update(double dt) {
-
-    if (isJumping) {
-      
-      riseUp(dt);
-    } 
-    else if (enteredPlatform) {
-
-        print("platform height: ${platform!.y}");
-        print("rechnung: ${platform!.y - height}");
-        double movement = jumpHeight * dt;
-        if (y + movement < platform!.y - height) {
-          print("move player back to platform");
-          y += movement; // move player back towards the ground
-        } 
-        else {
-          y = platform!.y - height;
-          print("auf plattform gelandet");
-        }
-    }
-    else if (enteredGap) {
-
-      if (!isJumping && y < gap!.y) {
-        print("move player down in the gap");
-        sinkdown(dt, groundLevel + gap!.height);
-      }
-
-    }
-    else if (y < groundLevel) {
-      print("sinkdown");
-      sinkdown(dt, groundLevel);
-    }
-  }
-
-  void jump() {
-    print("calling jump");
-    if (!isJumping) {
-      isJumping = true;
-      jumpHeight = 3.5 * height;
-      ///print('Jump initiated to height: $targetHeight'); // Debug-Ausgabe der Sprunggeschwindigkeit
-    }
-  }
-
-  Rect getRect() {
-    return Rect.fromLTWH(x, y, width, height);
-  }
-}
-
-class Obstacle {
-  double x;
-  double y;
-  double width;
-  double height;
-  double speed;
-
-  Obstacle({
-    required this.x,
-    required this.y,
-    required this.width,
-    required this.height,
-    this.speed = 200.0,
-  });
-
-  void update(double dt) {
-    x -= speed * dt;
-    ///print("Obstacle updated: x = $x, speed = $speed, dt = $dt"); // Debug-Ausgabe
-  }
-
-  Rect getRect() {
-    return Rect.fromLTWH(x, y, width, height);
-  }
-}
-
-class ParcourPainter extends CustomPainter {
-
-  final Player player;
-  final List<Obstacle> obstacles;
-  final List<Platform> platforms;
-  final List<Gap> gaps;
-  final Color color;
-
-  ParcourPainter({required this.player, required this.obstacles, required this.platforms, required this.gaps, required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // 0-Linie zeichnen
-    ///print("painting");
-    final zeroLinePaint = Paint()..color = Colors.black;
-    canvas.drawLine(Offset(0, size.height / 2), Offset(size.width, size.height / 2), zeroLinePaint);
-
-    // Zeichne die Fläche unter der 0-Linie grün
-    final greenPaint = Paint()..color = Colors.green;
-    canvas.drawRect(
-      Rect.fromLTRB(0, 250, size.width, size.height),
-      greenPaint,
-    );
-
-    // vertical scale with 50px steps
-    final verticalLinePaint = Paint()..color = Colors.blue;
-    final textPainter = TextPainter(
-      textAlign: TextAlign.left,
-      textDirection: TextDirection.ltr,
-    );
-
-    for (double i = 0; i <= size.height; i += 50) {
-      canvas.drawLine(Offset(0, i), Offset(10, i), verticalLinePaint);
-      textPainter.text = TextSpan(
-        text: i.toString(),
-        style: TextStyle(color: Colors.white, fontSize: 12),
-      );
-      textPainter.layout();
-      textPainter.paint(canvas, Offset(15, i - 6));
-    }
-
-    // draw obstacles
-    final obstaclePaint = Paint()..color = Colors.red;
-    for (var obstacle in obstacles) {
-      ///print("obstacle x: ${obstacle.x}");
-      canvas.drawRect(obstacle.getRect(), obstaclePaint);
-    }
-
-    //draw gaps
-    final gapPaint = Paint()..color = color;
-    for (var gap in gaps) {
-      canvas.drawRect(gap.getRect(), gapPaint); 
-    }
-
-    //draw platforms
-    final platformPaint = Paint()..color = Colors.green;
-    for (var platform in platforms) {
-      canvas.drawRect(platform.getRect(), platformPaint);
-    }
-
-    // draw player
-    final playerPaint = Paint()..color = Colors.yellow;
-    canvas.drawRect(player.getRect(), playerPaint);
-
-    // horizontal scale on x axis with 50px steps
-    final horizontalLinePaint = Paint()..color = Colors.green;
-    for (double i = 0; i <= size.width; i += 50) {
-      canvas.drawLine(Offset(i, player.groundLevel - 10), Offset(i, player.groundLevel + 10), horizontalLinePaint);
-      textPainter.text = TextSpan(
-        text: i.toString(),
-        style: TextStyle(color: Colors.white, fontSize: 12),
-      );
-      textPainter.layout();
-      textPainter.paint(canvas, Offset(i - 10, player.groundLevel + 15));
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true;
   }
 }

@@ -34,7 +34,7 @@ class AppsTab extends StatelessWidget {
   static List<AppInfo> sampleApps(BuildContext context, OpenEarable openEarable) {
     return [
         AppInfo(
-        logoPath: "lib/apps_tab/jump_height_test/assets/logo.png",
+        logoPath: "lib/apps_tab/parcour/assets/parcour.png",
         title: "Parcour",
         description: "Parcour game",
         onTap: () {

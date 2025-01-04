@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:open_earable/apps_tab/parcour/parcour_chart.dart';
+import 'package:open_earable/apps_tab/parcour/parcour_ui.dart';
 import 'dart:async';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'package:simple_kalman/simple_kalman.dart';
@@ -25,8 +25,8 @@ class GameState {
   bool isGameRunning = false;
   double lastUpdateTime = 0.0;
   double currentTime = 0.0;
-  int obstaclesOvercome = 0;
-  int highScore = 0;
+  double distance = 0;
+  double highScore = 0;
 
   void initializeTimer() {
     lastUpdateTime = 0.0;
@@ -34,24 +34,27 @@ class GameState {
     timer = Timer.periodic(Duration(milliseconds: 16), (timer) {
       currentTime = timer.tick * 0.016;
     });
-    //print("lastUpdateTime: $lastUpdateTime");
-    //print("Game State Time: $currentTime");
   }
 
   void startGameState() {
-    //print("starten das Game");
+    initializeTimer();
+    print("starten das Game");
     isGameRunning = true;
   }
 
-  double getCurrentTime() {
-    return DateTime.now().millisecondsSinceEpoch / 1000.0;
+  void pauseGame() {
+    isGameRunning = false;
   }
 
-  void stopGameState() {
-    if (obstaclesOvercome > highScore) {
-      highScore = obstaclesOvercome;
+  void resumeGame() {
+    lastUpdateTime = currentTime;
+    isGameRunning = true;
+  }
+
+  void endGameState() {
+    if (distance > highScore) {
+      highScore = distance;
     }
-    obstaclesOvercome = 0;
     isGameRunning = false;
     timer.cancel();
   }
@@ -104,6 +107,8 @@ class ParcourState extends State<Parcour>
   /// Pitch angle in radians.
   double _pitch = 0.0;
 
+  bool _pausedGame = false;
+
   /// Initializes state and sets up listeners for sensor data.
   @override
   void initState() {
@@ -148,7 +153,6 @@ class ParcourState extends State<Parcour>
   void _startGame() {
     print("Starting game");
 
-    gameState.initializeTimer();
     gameState.startGameState();
 
     setState(() {
@@ -159,21 +163,26 @@ class ParcourState extends State<Parcour>
     });
   }
 
-  /// Ends the game
-  void stopGame() {
-    print("Stopping game");
-    if (_gameActive) {
-      gameState.stopGameState();
-      setState(() {
-        _gameActive = false;
-        gameState.stopGameState();
-      });
-    }
+  void pauseGame() {
+    print("Pausing game");
+    gameState.pauseGame();
+    _pausedGame = true;
+    setState(() {
+      _pausedGame = true;
+    });
+  }
+
+  void resumeGame() {
+    print("Resuming game in parcour");
+    gameState.resumeGame();
+    _pausedGame = false;
+    setState(() {
+      _pausedGame = false;
+    });
   }
 
   /// Initializes Kalman filters for accelerometer data.
   void _initializeKalmanFilters() {
-    ///print("Initializing Kalman filters");
     _kalmanX = SimpleKalman(
       errorMeasure: _errorMeasureAcc,
       errorEstimate: _errorMeasureAcc,
@@ -262,7 +271,7 @@ class ParcourState extends State<Parcour>
         Expanded(
           child: (!widget.openEarable.bleManager.connected)
               ? EarableNotConnectedWarning()
-              : ParcourChart(this, gameState, widget.openEarable, "Parcour"),
+              : ParcourUI(this, gameState, widget.openEarable, "Parcour"),
         ),
           SizedBox(height: 20), // Margin between chart and button
         Align(
@@ -297,32 +306,46 @@ class ParcourState extends State<Parcour>
     return Column(
       children: [
         Text(
-          'Obstacles overcome: ${gameState.obstaclesOvercome}',
+          'Current distance: ${gameState.distance.toStringAsFixed(2)} m',
           style: Theme.of(context).textTheme.headlineMedium,
         ),
         Text(
-          'Current High Score: ${gameState.highScore}',
+          'High Score: ${gameState.highScore.toStringAsFixed(2)} m',
           style: Theme.of(context).textTheme.headlineMedium,
         ),
       ],
     );
   }
 
-  /// Builds buttons to start and stop the jump height measurement process.
   Widget _buildButtons() {
     return ElevatedButton(
-        onPressed: _earableConnected
-            ? () {
-                _gameActive ? stopGame() : _startGame();
+      onPressed: _earableConnected
+          ? () {
+              if (!_gameActive) {
+                _startGame(); // Spiel starten
+              } else if (_pausedGame) {
+                resumeGame(); // Spiel fortsetzen
+              } else {
+                pauseGame(); // Spiel pausieren
               }
-            : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: !_gameActive ? Colors.greenAccent : Colors.red,
-          foregroundColor: Theme.of(context).colorScheme.surface,
-        ),
-        child: Text(_gameActive ? 'Stop Jump' : 'Set Baseline & Start Game'),
-      );
+            }
+          : null,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: !_gameActive
+            ? Colors.greenAccent // Start
+            : _pausedGame
+                ? Colors.green // Pausiert
+                : Colors.red, // Aktiv
+        foregroundColor: Theme.of(context).colorScheme.surface,
+      ),
+      child: Text(!_gameActive
+          ? 'Set Baseline & Start Game'
+          : _pausedGame
+              ? 'Resume Game'
+              : 'Pause Game',),
+    );
   }
+
 
   /// Builds a sensor configuration for the OpenEarable device.
   /// Sets the sensor ID, sampling rate, and latency.

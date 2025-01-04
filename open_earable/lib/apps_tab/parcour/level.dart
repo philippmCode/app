@@ -1,61 +1,106 @@
-import 'package:open_earable/apps_tab/parcour/parcour_chart.dart';
+import 'package:open_earable/apps_tab/parcour/gap.dart';
+import 'package:open_earable/apps_tab/parcour/obstacle.dart';
+import 'package:open_earable/apps_tab/parcour/platform.dart';
+import 'package:open_earable/apps_tab/parcour/scenario.dart';
 
 class LevelManager {
 
   List<Level> levels = [];
   final double screenWidth;
   int levelId = 0;
+  int roundtTrips = 0;
+  int scenarioId = 0;
+  bool newLevel = false;
 
   LevelManager({
     required this.screenWidth,
   }) {
-    // Rufe die Methode auf, um Hindernisse zu initialisieren
-    fillLevels();
+    // fill the list with predefined levels
+    fillList();
   }
 
-  Level getLevel() {
-    print("levelId: $levelId");
-    if (levelId >= levels.length) {
-      levelId = 0;
+  Scenario getScenario() {
+    
+    if (scenarioId >= levels[levelId].scenarios.length) {
+      levelId++;
+      newLevel = true;
+      
+      if (levelId >= levels.length) {
+        levelId = 0;
+        roundtTrips++;
+      }
+      scenarioId = 0;
     }
-    return levels[levelId++];
+    else if (scenarioId == 0) {
+      newLevel = true;
+    }
+    else {
+      newLevel = false;
+    }
+    print("Level: $levelId, Scenario: $scenarioId");
+    return levels[levelId].scenarios[scenarioId++];
   }
 
-  void fillLevels() {
+  bool getNewLevel() {
+    return newLevel;
+  }
+
+  void fillList() {
     levels = _predefinedLevels(screenWidth);
   }
 
+  int getLevelSpeed() {
+    return levels[levelId].speed;
+  }
+
   void reset() {
-    levelId = 0;
+    // so that the player restarts in his actual level
+    scenarioId = 0;
   }
 }
 
 class Level {
-  final String name;
-  final int length;
-  final List<Obstacle> obstacles;
-  final List<Platform> platforms;
-  final List<Gap> gaps;
-  final double screenWidth;
-  Level({required this.name, required this.length, required this.obstacles, required this.platforms, required this.gaps, required this.screenWidth});
+  final int id;
+  final List<Scenario> scenarios;
+  final int speed;
+
+  Level({
+    required this.id,
+    required this.scenarios,
+    required this.speed,
+  });
 }
 
 List<Level> _predefinedLevels(double screenWidth) => [
-
   Level(
-    name: 'Level 1',
+    id: 0,
+    scenarios: [_predefinedScenarios(screenWidth)[0], _predefinedScenarios(screenWidth)[1]],
+    speed: 300,
+    ),
+  Level(
+    id: 1,
+    scenarios: [_predefinedScenarios(screenWidth)[2], _predefinedScenarios(screenWidth)[3]],
+    speed: 300,
+    ),
+];
+
+
+List<Scenario> _predefinedScenarios(double screenWidth) => [
+
+  Scenario(
+    name: 'Two close obstacles',
     length: 2000,
     obstacles: [
       Obstacle(
           x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
-          y: 200,
+          y: 300,
           width: 50,
           height: 50,
           speed: 300,
         ),
       Obstacle(
           x: screenWidth + 100,
-          y: 200,
+          y: 300,
           width: 50,
           height: 50,
           speed: 300,
@@ -65,13 +110,13 @@ List<Level> _predefinedLevels(double screenWidth) => [
     gaps: [],
     screenWidth: screenWidth,
   ),
-  Level(
-    name: 'Level 2',
+  Scenario(
+    name: 'Single Obstacle',
     length: 3000,
     obstacles: [
       Obstacle(
           x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
-          y: 200,
+          y: 300,
           width: 50,
           height: 50,
           speed: 300,
@@ -81,24 +126,24 @@ List<Level> _predefinedLevels(double screenWidth) => [
     gaps: [],
     screenWidth: screenWidth,
   ),
-    Level(
-    name: 'Level 3',
+  Scenario(
+    name: 'Singe gap',
     length: 3000,
     obstacles: [],
     platforms: [],
     gaps: [
-      Gap(x: screenWidth, y: 250, width: 400, height: 50, speed: 300),
-    ],
-    screenWidth: screenWidth,
+      Gap(x: screenWidth, y: 350, width: 400, height: 50, speed: 300),
+  ],
+  screenWidth: screenWidth,
   ),
-      Level(
-    name: 'Level 3',
+  Scenario(
+    name: 'Single platform',
     length: 3000,
     obstacles: [],
     platforms: [
-      Platform(x: screenWidth, y: 100, width: 300, height: 25, speed: 300),
-    ],
-    gaps: [],
-    screenWidth: screenWidth,
+      Platform(x: screenWidth, y: 200, width: 300, height: 25, speed: 300),
+  ],
+  gaps: [],
+  screenWidth: screenWidth,
   ),
 ];
