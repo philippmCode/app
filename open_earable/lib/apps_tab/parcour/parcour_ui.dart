@@ -18,7 +18,7 @@ import 'dart:core';
 import 'dart:ui' as ui;
 
 /// class representing the ParcourChart
-class ParcourChart extends StatefulWidget {
+class ParcourUI extends StatefulWidget {
 
   final OpenEarable openEarable;
   final GameState gameState;
@@ -28,14 +28,14 @@ class ParcourChart extends StatefulWidget {
   final String title;
 
   /// Constructs a ParcourChart object with a title, openEarable, gameState, and parcourState.
-  const ParcourChart(this.parcourState, this.gameState, this.openEarable, this.title, {super.key});
+  const ParcourUI(this.parcourState, this.gameState, this.openEarable, this.title, {super.key});
 
   @override
-  State<ParcourChart> createState() => _ParcourChartState();
+  State<ParcourUI> createState() => _ParcourUIState();
 }
 
 /// A class representing the state of a ParcourChart.
-class _ParcourChartState extends State<ParcourChart> {
+class _ParcourUIState extends State<ParcourUI> {
   /// The data of the chart.
   late List<DataValue> _data;
 
@@ -284,7 +284,7 @@ class _ParcourChartState extends State<ParcourChart> {
             distanceAtLevelStart = widget.gameState.distance;
             setState(() {
               showLevelText = true;
-              levelText = "Level ${levelManager.levelId + 1}";
+              levelText = "Level ${levelManager.levelId + 1 + levelManager.roundtTrips*levelManager.levels.length}";
             });
 
             // Blende den Level-Text nach 1 Sekunde aus
@@ -394,8 +394,8 @@ class _ParcourChartState extends State<ParcourChart> {
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: Text("Kollision erkannt!"),
-        content: Text("Das Spiel wird neu gestartet."),
+        title: Text("Collision detected!"),
+        content: Text("Try again!"),
         actions: [
           TextButton(
             onPressed: () {

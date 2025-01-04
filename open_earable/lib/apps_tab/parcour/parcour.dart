@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:open_earable/apps_tab/parcour/parcour_chart.dart';
+import 'package:open_earable/apps_tab/parcour/parcour_ui.dart';
 import 'dart:async';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'package:simple_kalman/simple_kalman.dart';
@@ -34,8 +34,6 @@ class GameState {
     timer = Timer.periodic(Duration(milliseconds: 16), (timer) {
       currentTime = timer.tick * 0.016;
     });
-    //print("lastUpdateTime: $lastUpdateTime");
-    //print("Game State Time: $currentTime");
   }
 
   void startGameState() {
@@ -185,7 +183,6 @@ class ParcourState extends State<Parcour>
 
   /// Initializes Kalman filters for accelerometer data.
   void _initializeKalmanFilters() {
-    ///print("Initializing Kalman filters");
     _kalmanX = SimpleKalman(
       errorMeasure: _errorMeasureAcc,
       errorEstimate: _errorMeasureAcc,
@@ -274,7 +271,7 @@ class ParcourState extends State<Parcour>
         Expanded(
           child: (!widget.openEarable.bleManager.connected)
               ? EarableNotConnectedWarning()
-              : ParcourChart(this, gameState, widget.openEarable, "Parcour"),
+              : ParcourUI(this, gameState, widget.openEarable, "Parcour"),
         ),
           SizedBox(height: 20), // Margin between chart and button
         Align(
@@ -345,7 +342,7 @@ class ParcourState extends State<Parcour>
           ? 'Set Baseline & Start Game'
           : _pausedGame
               ? 'Resume Game'
-              : 'Pause Game'),
+              : 'Pause Game',),
     );
   }
 

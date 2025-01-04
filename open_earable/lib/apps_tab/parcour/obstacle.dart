@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+/// Class representing an obstacle in the game
 class Obstacle {
   double x;
   double y;

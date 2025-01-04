@@ -8,13 +8,14 @@ class LevelManager {
   List<Level> levels = [];
   final double screenWidth;
   int levelId = 0;
+  int roundtTrips = 0;
   int scenarioId = 0;
   bool newLevel = false;
 
   LevelManager({
     required this.screenWidth,
   }) {
-    // Rufe die Methode auf, um Hindernisse zu initialisieren
+    // fill the list with predefined levels
     fillList();
   }
 
@@ -26,6 +27,7 @@ class LevelManager {
       
       if (levelId >= levels.length) {
         levelId = 0;
+        roundtTrips++;
       }
       scenarioId = 0;
     }
@@ -81,6 +83,7 @@ List<Level> _predefinedLevels(double screenWidth) => [
     speed: 300,
     ),
 ];
+
 
 List<Scenario> _predefinedScenarios(double screenWidth) => [
 
