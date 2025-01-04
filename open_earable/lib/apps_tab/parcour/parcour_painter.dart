@@ -14,6 +14,7 @@ class ParcourPainter extends CustomPainter {
   final List<Gap> gaps;
   final Color color;
   final ui.Image playerImage;
+  final ui.Image obstacleImage;
 
   ParcourPainter({
     required this.player,
@@ -22,6 +23,7 @@ class ParcourPainter extends CustomPainter {
     required this.gaps,
     required this.color,
     required this.playerImage,
+    required this.obstacleImage,
   });
 
   @override
@@ -56,10 +58,14 @@ class ParcourPainter extends CustomPainter {
     }
 
     // draw obstacles
-    final obstaclePaint = Paint()..color = Colors.red;
     for (var obstacle in obstacles) {
-      ///print("obstacle x: ${obstacle.x}");
-      canvas.drawRect(obstacle.getRect(), obstaclePaint);
+      final obstacleRect = obstacle.getRect();
+      canvas.drawImageRect(
+        obstacleImage,
+        Rect.fromLTWH(0, 0, obstacleImage.width.toDouble(), obstacleImage.height.toDouble()),
+        obstacleRect,
+        Paint(),
+      );
     }
 
     //draw gaps

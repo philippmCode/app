@@ -78,6 +78,7 @@ class _ParcourUIState extends State<ParcourUI> {
   bool enteredGap = false;
   late LevelManager levelManager;
   late ui.Image playerImage;
+  late ui.Image obstacleImage;
   bool pictureLoaded = false;
   bool showLevelText = false;
   String levelText = "";
@@ -105,6 +106,12 @@ class _ParcourUIState extends State<ParcourUI> {
       pictureLoaded = true;
       print("Player image loaded: ${image.width}x${image.height}");
     });
+    _loadImage('lib/apps_tab/parcour/assets/Obstacle.jpg').then((image) {
+      obstacleImage = image;
+      pictureLoaded = true;
+      print("Obstacle image loaded: ${image.width}x${image.height}");
+    });
+
   }
 
   Future<ui.Image> _loadImage(String asset) async {
@@ -451,6 +458,7 @@ void _resetGame() {
                     gaps: gaps,
                     color: Theme.of(context).colorScheme.surface,
                     playerImage: playerImage,
+                    obstacleImage: obstacleImage,
                   ),
                   child: Container(),
                 ),
