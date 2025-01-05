@@ -120,8 +120,8 @@ class Player {
   bool hasGroundContanct() {
 
     print("enteredGap: $enteredGap, y: $y, groundLevel: $groundLevel, gapHeight: ${gap?.height}");
-    print(enteredGap && y == groundLevel + (gap?.height ?? 0));
-    if (y == groundLevel || (enteredGap && y == groundLevel + (gap?.height ?? 0)) || enteredPlatform) {
+    print(y == groundLevel || (enteredGap && y == groundLevel + (gap?.height ?? 0)) || (enteredPlatform && y == (platform?.y ?? 0) - height));
+    if (y == groundLevel || (enteredGap && y == groundLevel + (gap?.height ?? 0)) || (enteredPlatform && y == (platform?.y ?? 0) - height)) {
       return true;
     }
     return false;

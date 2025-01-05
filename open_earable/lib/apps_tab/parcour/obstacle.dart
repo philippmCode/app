@@ -18,7 +18,6 @@ class Obstacle {
 
   void update(double dt) {
     x -= speed * dt;
-    ///print("Obstacle updated: x = $x, speed = $speed, dt = $dt"); // Debug-Ausgabe
   }
 
   Rect getRect() {

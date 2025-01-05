@@ -222,7 +222,6 @@ class _ParcourUIState extends State<ParcourUI> {
   void updateGame(double dt) {
 
     if (!widget.gameState.isGameRunning) return; // Verhindere weitere Updates, wenn das Spiel gestoppt wurde
-    print("updating game");
     setState(() {
 
       player.update(dt);
@@ -259,10 +258,8 @@ class _ParcourUIState extends State<ParcourUI> {
 
       if (obstacles.isEmpty && platforms.isEmpty && gaps.isEmpty) {
         
-        print("wir rufen ein level auf");
-        
         Scenario actualScenario = levelManager.getScenario();
-        print("actualScenario: ${actualScenario.name}");
+
         obstacles = actualScenario.obstacles.map((obstacle) => Obstacle(
           x: obstacle.x,
           y: obstacle.y,
@@ -303,7 +300,6 @@ class _ParcourUIState extends State<ParcourUI> {
         }
       }
       setState(() {
-        print("levelManager.scenarioId: ${levelManager.scenarioId}");
         progress = ((levelManager.scenarioId -1) / levelManager.levels[levelManager.levelId].scenarios.length);
       });
       checkGap();
@@ -347,11 +343,12 @@ class _ParcourUIState extends State<ParcourUI> {
                             playerRect.right > platformRect.left &&
                             playerRect.left < platformRect.right;
       if (isOverPlatform && !enteredPlatform) {
+        print("player is over platform");
         player.enterPlatform(platform);
         enteredPlatform = true;
         break; // break the loop
       }
-      else if (enteredPlatform && !isOverPlatform) {
+      else if (enteredPlatform && !isOverPlatform && platform == player.platform) {
         print("calling the method to leave the platform");
         player.leavePlatform();
         enteredPlatform = false;
@@ -360,9 +357,9 @@ class _ParcourUIState extends State<ParcourUI> {
   }
 
   void checkCollisions() {
-    ///print("checking collisions");
+
     for (var obstacle in obstacles) {
-      print("obstacle x: ${obstacle.x}");
+
       if (player.getRect().overlaps(obstacle.getRect())) {
         print("obstacle collision detected");
         _handleCollision();
@@ -434,9 +431,7 @@ void _resetGame() {
   @override
   Widget build(BuildContext context) {
   
-    print("parcour chart building");
     if (widget.gameState.isGameRunning) {
-      print("picture was loaded");
       double timeNow = widget.gameState.currentTime;
       //print("currentTime: $timeNow" "lastUpdateTime: ${widget.gameState.lastUpdateTime}");  
       double dt = timeNow - widget.gameState.lastUpdateTime;
