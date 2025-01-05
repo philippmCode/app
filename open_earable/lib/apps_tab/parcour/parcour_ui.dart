@@ -261,6 +261,7 @@ class _ParcourUIState extends State<ParcourUI> {
       updateGaps(dt);
       updateObstacles(dt);
 
+      // so the background painter again uses the first image
       if (backgroundOffset <= -MediaQuery.of(context).size.width) {
         backgroundOffset = 0.0;
       }
