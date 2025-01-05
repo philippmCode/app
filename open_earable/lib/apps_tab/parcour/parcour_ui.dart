@@ -165,14 +165,8 @@ class _ParcourUIState extends State<ParcourUI> {
         units: {"X": "m/s²", "Y": "m/s²", "Z": "m/s²"},
       );
 
-      switch (widget.title) {
-        case "Parcour":
-          DataValue height = _calculateHeightData(filteredAccData);
-          _updateData(height);
-          break;
-        default:
-          throw ArgumentError("Invalid tab title.");
-      }
+      DataValue height = _calculateHeightData(filteredAccData);
+      _updateData(height);
     });
   }
 
