@@ -164,6 +164,7 @@ class _ParcourUIState extends State<ParcourUI> {
 
       _calculateHeightData(filteredAccData);
       print("wir sind hier fertig");
+      setState(() {});
     });
   }
 
