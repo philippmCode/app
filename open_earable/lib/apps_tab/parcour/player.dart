@@ -3,16 +3,25 @@ import 'dart:ui';
 import 'package:open_earable/apps_tab/parcour/gap.dart';
 import 'package:open_earable/apps_tab/parcour/platform.dart';
 
+// Class representing the player in the game
 class Player {
+
+  // player position and size
   double x;
   double y;
   double width;
   double height;
+
+  // player movement
   bool isJumping;
+  double jumpHeight;
+
+  // environment variables
   double gravity;
   double groundLevel;
-  double jumpHeight;
   double startingHeight = 300;
+
+  // interaction with game elements
   bool enteredPlatform = false;
   Platform? platform;
   bool enteredGap = false;
@@ -50,6 +59,7 @@ class Player {
     platform = null;
   }
 
+  // move player back to the ground after jump
   void sinkdown(double dt, double targetHeight) {
 
     print("targetHeight: $targetHeight");
@@ -62,6 +72,7 @@ class Player {
     }
   }
 
+  // move player up in the air when jumping
   void riseUp(double dt) {
 
     y -= (jumpHeight) * dt; // move player towards target height
@@ -73,6 +84,7 @@ class Player {
     }
   }
 
+  // update player position
   void update(double dt) {
 
     if (isJumping) {
@@ -117,16 +129,17 @@ class Player {
   }
 
   // check if player is in contact with the ground to prevent double jumps
-  bool hasGroundContanct() {
+  bool hasGroundContact() {
 
     print("enteredGap: $enteredGap, y: $y, groundLevel: $groundLevel, gapHeight: ${gap?.height}");
-    print(enteredGap && y == groundLevel + (gap?.height ?? 0));
-    if (y == groundLevel || (enteredGap && y == groundLevel + (gap?.height ?? 0)) || enteredPlatform) {
+    print(y == groundLevel || (enteredGap && y == groundLevel + (gap?.height ?? 0)) || (enteredPlatform && y == (platform?.y ?? 0) - height));
+    if (y == groundLevel || (enteredGap && y == groundLevel + (gap?.height ?? 0)) || (enteredPlatform && y == (platform?.y ?? 0) - height)) {
       return true;
     }
     return false;
   }
 
+  // returns the rectangle of the player used for collision detection
   Rect getRect() {
     return Rect.fromLTWH(x, y, width, height);
   }

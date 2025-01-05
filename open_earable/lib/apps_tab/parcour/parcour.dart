@@ -19,6 +19,7 @@ class Parcour extends StatefulWidget {
   State<Parcour> createState() => ParcourState();
 }
 
+// State class for the game.
 class GameState {
 
   late Timer timer;

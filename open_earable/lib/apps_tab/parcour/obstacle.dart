@@ -16,11 +16,12 @@ class Obstacle {
     this.speed = 200.0,
   });
 
+  // moves the obstacle to the left
   void update(double dt) {
     x -= speed * dt;
-    ///print("Obstacle updated: x = $x, speed = $speed, dt = $dt"); // Debug-Ausgabe
   }
 
+  // returns the rectangle of the obstacle used for collision detection
   Rect getRect() {
     return Rect.fromLTWH(x, y, width, height);
   }

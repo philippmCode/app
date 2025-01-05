@@ -6,6 +6,7 @@ import 'package:open_earable/apps_tab/parcour/obstacle.dart';
 import 'package:open_earable/apps_tab/parcour/player.dart';
 import 'package:open_earable/apps_tab/parcour/platform.dart';
 
+// CustomPainter for the Parcour game
 class ParcourPainter extends CustomPainter {
 
   final Player player;
@@ -14,6 +15,7 @@ class ParcourPainter extends CustomPainter {
   final List<Gap> gaps;
   final Color color;
   final ui.Image playerImage;
+  final ui.Image obstacleImage;
 
   ParcourPainter({
     required this.player,
@@ -22,12 +24,15 @@ class ParcourPainter extends CustomPainter {
     required this.gaps,
     required this.color,
     required this.playerImage,
+    required this.obstacleImage,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 0-Linie zeichnen
+
     print("painting");
+
+    // 0-Linie zeichnen
     final zeroLinePaint = Paint()..color = Colors.black;
     canvas.drawLine(Offset(0, size.height / 2), Offset(size.width, size.height / 2), zeroLinePaint);
 
@@ -56,10 +61,14 @@ class ParcourPainter extends CustomPainter {
     }
 
     // draw obstacles
-    final obstaclePaint = Paint()..color = Colors.red;
     for (var obstacle in obstacles) {
-      ///print("obstacle x: ${obstacle.x}");
-      canvas.drawRect(obstacle.getRect(), obstaclePaint);
+      final obstacleRect = obstacle.getRect();
+      canvas.drawImageRect(
+        obstacleImage,
+        Rect.fromLTWH(0, 0, obstacleImage.width.toDouble(), obstacleImage.height.toDouble()),
+        obstacleRect,
+        Paint(),
+      );
     }
 
     //draw gaps

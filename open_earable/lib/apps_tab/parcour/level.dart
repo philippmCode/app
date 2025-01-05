@@ -3,6 +3,7 @@ import 'package:open_earable/apps_tab/parcour/obstacle.dart';
 import 'package:open_earable/apps_tab/parcour/platform.dart';
 import 'package:open_earable/apps_tab/parcour/scenario.dart';
 
+// manages which level and scenario is currently active
 class LevelManager {
 
   List<Level> levels = [];
@@ -13,6 +14,7 @@ class LevelManager {
   bool newLevel = false;
 
   LevelManager({
+    // the game elements are spwaned directly next to the screen
     required this.screenWidth,
   }) {
     // fill the list with predefined levels
@@ -37,7 +39,6 @@ class LevelManager {
     else {
       newLevel = false;
     }
-    print("Level: $levelId, Scenario: $scenarioId");
     return levels[levelId].scenarios[scenarioId++];
   }
 
@@ -49,6 +50,7 @@ class LevelManager {
     levels = _predefinedLevels(screenWidth);
   }
 
+  // the speed for all scenarios in the level used then to calculate the distance the player has covered
   int getLevelSpeed() {
     return levels[levelId].speed;
   }
@@ -59,6 +61,7 @@ class LevelManager {
   }
 }
 
+// Class representing a level in the game
 class Level {
   final int id;
   final List<Scenario> scenarios;
@@ -71,20 +74,16 @@ class Level {
   });
 }
 
+// returns a list of predefined levels
 List<Level> _predefinedLevels(double screenWidth) => [
   Level(
     id: 0,
-    scenarios: [_predefinedScenarios(screenWidth)[0], _predefinedScenarios(screenWidth)[1]],
-    speed: 300,
-    ),
-  Level(
-    id: 1,
-    scenarios: [_predefinedScenarios(screenWidth)[2], _predefinedScenarios(screenWidth)[3]],
+    scenarios: [_predefinedScenarios(screenWidth)[5], _predefinedScenarios(screenWidth)[6]],
     speed: 300,
     ),
 ];
 
-
+// returns a list of predefined scenarios
 List<Scenario> _predefinedScenarios(double screenWidth) => [
 
   Scenario(
@@ -92,7 +91,7 @@ List<Scenario> _predefinedScenarios(double screenWidth) => [
     length: 2000,
     obstacles: [
       Obstacle(
-          x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
+          x: screenWidth,
           y: 300,
           width: 50,
           height: 50,
@@ -127,7 +126,7 @@ List<Scenario> _predefinedScenarios(double screenWidth) => [
     screenWidth: screenWidth,
   ),
   Scenario(
-    name: 'Singe gap',
+    name: 'Single gap',
     length: 3000,
     obstacles: [],
     platforms: [],
@@ -144,6 +143,86 @@ List<Scenario> _predefinedScenarios(double screenWidth) => [
       Platform(x: screenWidth, y: 200, width: 300, height: 25, speed: 300),
   ],
   gaps: [],
+  screenWidth: screenWidth,
+  ),
+  Scenario(
+  name: 'Obstacles between platforms 300',
+  length: 3000,
+  obstacles: [   
+      Obstacle(
+      x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
+      y: 300,
+      width: 50,
+      height: 50,
+      speed: 300,
+    ),   
+    Obstacle(
+        x: screenWidth + 250, // Setze die x-Position auf die Breite des Bildschirms
+        y: 300,
+        width: 50,
+        height: 50,
+        speed: 300,
+      ),
+            Obstacle(
+        x: screenWidth + 350, // Setze die x-Position auf die Breite des Bildschirms
+        y: 300,
+        width: 50,
+        height: 50,
+        speed: 300,
+      ),
+      Obstacle(
+        x: screenWidth + 450, // Setze die x-Position auf die Breite des Bildschirms
+        y: 300,
+        width: 50,
+        height: 50,
+        speed: 300,
+      ),],
+  platforms: [
+    Platform(x: screenWidth, y: 200, width: 300, height: 25, speed: 300),
+    Platform(x: screenWidth + 450, y: 200, width: 300, height: 25, speed: 300),
+  ],
+  gaps: [],
+  screenWidth: screenWidth,
+  ),
+  Scenario(
+    name: 'Obstacle after Gap',
+    length: 3000,
+    obstacles: [      
+      Obstacle(
+        x: screenWidth + 400, // Setze die x-Position auf die Breite des Bildschirms
+        y: 300,
+        width: 50,
+        height: 50,
+        speed: 300,
+      )],
+    platforms: [],
+    gaps: [
+      Gap(x: screenWidth, y: 350, width: 400, height: 50, speed: 300),
+  ],
+  screenWidth: screenWidth,
+  ),
+  Scenario(
+    name: 'Obstacles surrouding Gap',
+    length: 3000,
+    obstacles: [      
+      Obstacle(
+        x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
+        y: 300,
+        width: 50,
+        height: 50,
+        speed: 300,
+      ),
+      Obstacle(
+        x: screenWidth + 550, // Setze die x-Position auf die Breite des Bildschirms
+        y: 300,
+        width: 50,
+        height: 50,
+        speed: 300,
+      )],
+    platforms: [],
+    gaps: [
+      Gap(x: screenWidth + 50, y: 350, width: 500, height: 50, speed: 300),
+  ],
   screenWidth: screenWidth,
   ),
 ];

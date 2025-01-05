@@ -12,32 +12,29 @@ import 'package:open_earable/apps_tab/parcour/scenario.dart';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:simple_kalman/simple_kalman.dart';
-import 'package:collection/collection.dart';
 import 'dart:math';
 import 'dart:core';
 import 'dart:ui' as ui;
 
-/// class representing the ParcourChart
+/// A class representing the ParcourUI.
 class ParcourUI extends StatefulWidget {
 
   final OpenEarable openEarable;
   final GameState gameState;
   final ParcourState parcourState;
 
-  /// The title of the chart.
+  /// The title of the page.
   final String title;
 
-  /// Constructs a ParcourChart object with a title, openEarable, gameState, and parcourState.
+  /// Constructs a ParcourUI object with a title, openEarable, gameState, and parcourState.
   const ParcourUI(this.parcourState, this.gameState, this.openEarable, this.title, {super.key});
 
   @override
   State<ParcourUI> createState() => _ParcourUIState();
 }
 
-/// A class representing the state of a ParcourChart.
+/// A class representing the state of a ParcourUI.
 class _ParcourUIState extends State<ParcourUI> {
-  /// The data of the chart.
-  late List<DataValue> _data;
 
   /// The subscription to the data.
   StreamSubscription? _dataSubscription;
@@ -69,44 +66,63 @@ class _ParcourUIState extends State<ParcourUI> {
   /// The height of the jump.
   double _height = 0.0;
 
+  // the player object
   late Player player;
+  late Rect playerRect;
+
+  // the images for all game elements
+  late ui.Image playerImage;
+  late ui.Image obstacleImage;
+  bool pictureLoaded = false;
+
+  // the currently active game elements
   List<Obstacle> obstacles = [];
   List<Platform> platforms = [];
   List<Gap> gaps = [];
-  double lastUpdateTime = 0.0;
+
+  // describe the situation of the player
   bool enteredPlatform = false;
   bool enteredGap = false;
-  late LevelManager levelManager;
-  late ui.Image playerImage;
-  bool pictureLoaded = false;
-  bool showLevelText = false;
-  String levelText = "";
   double progress = 0.0;
   double distanceAtLevelStart = 0.0;
+
+  // the game mechanics
+  late LevelManager levelManager;
+  double lastUpdateTime = 0.0;
+  bool showLevelText = false;
+  String levelText = "";
+
 
   @override
   void initState() {
     print("init von parcour_chart");
     super.initState();
-    _data = [];
     double screenWidth = MediaQuery.of(context).size.width; // Breite des Bildschirms
     levelManager = LevelManager(screenWidth: screenWidth);
     _setupListeners();
       player = Player(
-        x: 275,
+        x: 350,
         y: 300,
         width: 50,
         height: 50,
         groundLevel: 300,
     );
-    // Lade die Bilder
+    playerRect = player.getRect();
+    // load the images
     _loadImage('lib/apps_tab/parcour/assets/Player.jpeg').then((image) {
       playerImage = image;
       pictureLoaded = true;
       print("Player image loaded: ${image.width}x${image.height}");
     });
+    _loadImage('lib/apps_tab/parcour/assets/Obstacle.jpg').then((image) {
+      obstacleImage = image;
+      pictureLoaded = true;
+      print("Obstacle image loaded: ${image.width}x${image.height}");
+    });
+
   }
 
+  // load the image from the assets
   Future<ui.Image> _loadImage(String asset) async {
     final ByteData data = await rootBundle.load(asset);
     final Completer<ui.Image> completer = Completer();
@@ -116,6 +132,7 @@ class _ParcourUIState extends State<ParcourUI> {
       
   /// Sets up the listeners for the data.
   void _setupListeners() {
+    print("setupListeners");
     _kalmanX = SimpleKalman(
       errorMeasure: _errorMeasureAcc,
       errorEstimate: _errorMeasureAcc,
@@ -145,19 +162,14 @@ class _ParcourUIState extends State<ParcourUI> {
         units: {"X": "m/s²", "Y": "m/s²", "Z": "m/s²"},
       );
 
-      switch (widget.title) {
-        case "Parcour":
-          DataValue height = _calculateHeightData(filteredAccData);
-          _updateData(height);
-          break;
-        default:
-          throw ArgumentError("Invalid tab title.");
-      }
+      _calculateHeightData(filteredAccData);
+      setState(() {});
     });
   }
 
   /// Calculates the height of the jump.
-  DataValue _calculateHeightData(XYZValue accValue) {
+  void _calculateHeightData(XYZValue accValue) {
+
     // Subtract gravity to get acceleration due to movement.
     double currentAcc =
         accValue.z * cos(_pitch) + accValue.x * sin(_pitch) - _gravity;
@@ -184,26 +196,11 @@ class _ParcourUIState extends State<ParcourUI> {
     // Prevent height from going negative.
     _height = max(0, _height);
 
-    if (_height > 0.1 && player.hasGroundContanct()) {
+    if (_height > 0.1 && player.hasGroundContact()) {
       player.jump();
     }
-
-    return Jump(
-      DateTime.fromMillisecondsSinceEpoch(accValue._timestamp),
-      _height,
-    );
   }
 
-  /// Updates the data of the chart.
-  void _updateData(DataValue value) {
-    setState(() {
-      _data.add(value);
-      DataValue? minXYZValue = minBy(_data, (DataValue b) => b.getMin());
-      if (minXYZValue == null) {
-        return;
-      }
-    });
-  }
 
   @override
   void dispose() {
@@ -211,33 +208,32 @@ class _ParcourUIState extends State<ParcourUI> {
     _dataSubscription?.cancel();
   }
 
-
-  void updateGame(double dt) {
-
-    if (!widget.gameState.isGameRunning) return; // Verhindere weitere Updates, wenn das Spiel gestoppt wurde
-    print("updating game");
-    setState(() {
-
-      player.update(dt);
-
+  // update the platforms and remove those that are out of the screen
+  void updatePlatforms(double dt) {
       List<Platform> platformsToRemove = [];
       for (var platform in platforms) {
         platform.update(dt);
         if (platform.x < -platform.width) {
-          platformsToRemove.add(platform); // Füge das Hindernis zur Liste der zu entfernenden Hindernisse hinzu
+          platformsToRemove.add(platform);
         }
       }
       platforms.removeWhere((platform) => platformsToRemove.contains(platform));
+  }
 
+  // update the gaps and remove those that are out of the screen
+  void updateGaps(double dt) {
       List<Gap> gapsToRemove = [];
       for (var gap in gaps) {
         gap.update(dt);
         if (gap.x < -gap.width) {
-          gapsToRemove.add(gap); // Füge das Hindernis zur Liste der zu entfernenden Hindernisse hinzu
+          gapsToRemove.add(gap);
         }
       }
       gaps.removeWhere((gap) => gapsToRemove.contains(gap));
+  }
 
+  // update the obstacles and remove those that are out of the screen
+  void updateObstacles(double dt) {
       List<Obstacle> obstaclesToRemove = [];
       for (var obstacle in obstacles) {
         obstacle.update(dt);
@@ -246,16 +242,27 @@ class _ParcourUIState extends State<ParcourUI> {
         }
       }
       obstacles.removeWhere((obstacle) => obstaclesToRemove.contains(obstacle));
+  }
+
+  void updateGame(double dt) {
+
+    if (!widget.gameState.isGameRunning) return; // Verhindere weitere Updates, wenn das Spiel gestoppt wurde
+    setState(() {
+
+      player.update(dt);
+      updatePlatforms(dt);
+      updateGaps(dt);
+      updateObstacles(dt);
 
       //update the distance the player has covered
       widget.gameState.distance += (levelManager.getLevelSpeed() / 100) * dt;
 
+      // previous level is finished
       if (obstacles.isEmpty && platforms.isEmpty && gaps.isEmpty) {
         
-        print("wir rufen ein level auf");
-        
+        // starting new scenario
         Scenario actualScenario = levelManager.getScenario();
-        print("actualScenario: ${actualScenario.name}");
+
         obstacles = actualScenario.obstacles.map((obstacle) => Obstacle(
           x: obstacle.x,
           y: obstacle.y,
@@ -278,16 +285,17 @@ class _ParcourUIState extends State<ParcourUI> {
           speed: gap.speed,
         ),).toList();
 
+        // if the new scenario is from a new level
         if (levelManager.getNewLevel()) {
             
-            // Zeige den Level-Text an
+            // display the level text
             distanceAtLevelStart = widget.gameState.distance;
             setState(() {
               showLevelText = true;
               levelText = "Level ${levelManager.levelId + 1 + levelManager.roundtTrips*levelManager.levels.length}";
             });
 
-            // Blende den Level-Text nach 1 Sekunde aus
+            // text is displayed for 1 second
             Timer(Duration(seconds: 1), () {
               setState(() {
                 showLevelText = false;
@@ -296,23 +304,22 @@ class _ParcourUIState extends State<ParcourUI> {
         }
       }
       setState(() {
-        print("levelManager.scenarioId: ${levelManager.scenarioId}");
         progress = ((levelManager.scenarioId -1) / levelManager.levels[levelManager.levelId].scenarios.length);
       });
+      playerRect = player.getRect();
       checkGap();
       checkPlatform();
       checkCollisions();
     });
   }
 
+  // check if the player is over a gap
   void checkGap() {
 
     for (var gap in gaps) {
 
-      var playerRect = player.getRect();
       var gapRect = gap.getRect();
 
-      // Prüfen, ob der Spieler über der Plattform ist (nicht Berührung, sondern oberhalb)
       bool isOverGap = playerRect.right > gapRect.left && playerRect.right < gapRect.right;
 
       if (isOverGap && !enteredGap) {
@@ -328,23 +335,23 @@ class _ParcourUIState extends State<ParcourUI> {
     }
   }
 
+  // check if the player is over a platform
   void checkPlatform() {
 
     for (var platform in platforms) {
 
-      var playerRect = player.getRect();
       var platformRect = platform.getRect();
 
-      // Prüfen, ob der Spieler über der Plattform ist (nicht Berührung, sondern oberhalb)
       bool isOverPlatform = playerRect.bottom <= platformRect.top &&
                             playerRect.right > platformRect.left &&
                             playerRect.left < platformRect.right;
       if (isOverPlatform && !enteredPlatform) {
+        print("player is over platform");
         player.enterPlatform(platform);
         enteredPlatform = true;
         break; // break the loop
       }
-      else if (enteredPlatform && !isOverPlatform) {
+      else if (enteredPlatform && !isOverPlatform && platform == player.platform) {
         print("calling the method to leave the platform");
         player.leavePlatform();
         enteredPlatform = false;
@@ -352,10 +359,11 @@ class _ParcourUIState extends State<ParcourUI> {
     }
   }
 
+  // check if the player collides with an obstacle or the right side of a gap
   void checkCollisions() {
-    ///print("checking collisions");
+
     for (var obstacle in obstacles) {
-      print("obstacle x: ${obstacle.x}");
+
       if (player.getRect().overlaps(obstacle.getRect())) {
         print("obstacle collision detected");
         _handleCollision();
@@ -365,8 +373,8 @@ class _ParcourUIState extends State<ParcourUI> {
     ///player collides right side of the gap
     for (var gap in gaps) {
       if (player.getRect().right >= gap.getRect().right &&
-      player.getRect().left < gap.getRect().right && // Spieler ist noch innerhalb des Gaps auf der linken Seite
-      player.getRect().bottom >= gap.getRect().top && // Spieler ist nicht unterhalb des Gaps
+      player.getRect().left < gap.getRect().right && // player has not yet entered the gap
+      player.getRect().bottom >= gap.getRect().top && // player is at the same height as the gap
       player.getRect().top <= gap.getRect().bottom) {
         print("gap collision detected");
         print("player right: ${player.getRect().right}");
@@ -378,9 +386,10 @@ class _ParcourUIState extends State<ParcourUI> {
       }
     }
   }
-
+  
+  // handle the collision
   void _handleCollision() {
-  // Beispiel: Zeige eine Nachricht an und setze den Spielzustand zurück
+
     print("collision detected");
     levelManager.reset();
     widget.gameState.endGameState();
@@ -410,11 +419,11 @@ class _ParcourUIState extends State<ParcourUI> {
   );
 }
 
+// reset the game
 void _resetGame() {
   setState(() {
-    //print("resetting game");
     player = Player(
-      x: 275,
+      x: 350,
       y: 300,
       width: 50,
       height: 50,
@@ -427,14 +436,10 @@ void _resetGame() {
   @override
   Widget build(BuildContext context) {
   
-    print("parcour chart building");
     if (widget.gameState.isGameRunning) {
-      print("picture was loaded");
-      double timeNow = widget.gameState.currentTime;
-      //print("currentTime: $timeNow" "lastUpdateTime: ${widget.gameState.lastUpdateTime}");  
+      double timeNow = widget.gameState.currentTime; 
       double dt = timeNow - widget.gameState.lastUpdateTime;
       widget.gameState.lastUpdateTime = timeNow;
-      //print("dt setzen: $dt");
       updateGame(dt);
     }
     return pictureLoaded
@@ -451,6 +456,7 @@ void _resetGame() {
                     gaps: gaps,
                     color: Theme.of(context).colorScheme.surface,
                     playerImage: playerImage,
+                    obstacleImage: obstacleImage,
                   ),
                   child: Container(),
                 ),
@@ -464,9 +470,9 @@ void _resetGame() {
           ),
           if (showLevelText) 
             Align(
-              alignment: Alignment.topCenter, // Positioniere den Text oben
+              alignment: Alignment.topCenter, 
               child: Padding(
-                padding: const EdgeInsets.only(top: 20.0), // Verschiebe den Text nach unten
+                padding: const EdgeInsets.only(top: 20.0), // move text down
                 child: Container(
                   padding: EdgeInsets.all(16.0),
                   color: Colors.black54,
@@ -536,39 +542,5 @@ class XYZValue extends DataValue {
   @override
   String toString() {
     return "timestamp: $_timestamp\nx: $x, y: $y, z: $z";
-  }
-}
-
-/// A class representing a jump with a time and height.
-class Jump extends DataValue {
-  
-  /// The time of the jump.
-  final DateTime _time;
-
-  /// The height of the jump.
-  final double _height;
-
-  /// Constructs a Jump object with a time and height.
-  Jump(DateTime time, double height)
-      : _time = time,
-        _height = height,
-        super(
-          timestamp: time.millisecondsSinceEpoch,
-          units: {'height': 'meters'},
-        );
-
-  @override
-  double getMin() {
-    return 0.0;
-  }
-
-  @override
-  double getMax() {
-    return _height;
-  }
-
-  @override
-  String toString() {
-    return "timestamp: ${_time.millisecondsSinceEpoch}\nheight $_height";
   }
 }
