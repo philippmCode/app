@@ -16,6 +16,8 @@ class ParcourPainter extends CustomPainter {
   final Color color;
   final ui.Image playerImage;
   final ui.Image obstacleImage;
+  final ui.Image backgroundImage;
+  double backgroundOffset = 0;
 
   ParcourPainter({
     required this.player,
@@ -25,6 +27,7 @@ class ParcourPainter extends CustomPainter {
     required this.color,
     required this.playerImage,
     required this.obstacleImage,
+    required this.backgroundImage,
   });
 
   @override
@@ -32,9 +35,15 @@ class ParcourPainter extends CustomPainter {
 
     print("painting");
 
-    // 0-Linie zeichnen
-    final zeroLinePaint = Paint()..color = Colors.black;
-    canvas.drawLine(Offset(0, size.height / 2), Offset(size.width, size.height / 2), zeroLinePaint);
+    final double backgroundHeight = 350;
+    final double backgroundWidth = size.width;
+    final backgroundRect = Rect.fromLTWH(0, 0, backgroundWidth, backgroundHeight);
+    canvas.drawImageRect(
+      backgroundImage,
+      Rect.fromLTWH(0, 0, backgroundImage.width.toDouble(), backgroundImage.height.toDouble()),
+      backgroundRect,
+      Paint(),
+    );
 
     // Zeichne die Fläche unter der 0-Linie grün
     final greenPaint = Paint()..color = Colors.green;
@@ -42,23 +51,6 @@ class ParcourPainter extends CustomPainter {
       Rect.fromLTRB(0, 350, size.width, size.height),
       greenPaint,
     );
-
-    // vertical scale with 50px steps
-    final verticalLinePaint = Paint()..color = Colors.blue;
-    final textPainter = TextPainter(
-      textAlign: TextAlign.left,
-      textDirection: TextDirection.ltr,
-    );
-
-    for (double i = 0; i <= size.height; i += 50) {
-      canvas.drawLine(Offset(0, i), Offset(10, i), verticalLinePaint);
-      textPainter.text = TextSpan(
-        text: i.toString(),
-        style: TextStyle(color: Colors.white, fontSize: 12),
-      );
-      textPainter.layout();
-      textPainter.paint(canvas, Offset(15, i - 6));
-    }
 
     // draw obstacles
     for (var obstacle in obstacles) {
@@ -72,7 +64,7 @@ class ParcourPainter extends CustomPainter {
     }
 
     //draw gaps
-    final gapPaint = Paint()..color = color;
+    final gapPaint = Paint()..color = Colors.white;
     for (var gap in gaps) {
       canvas.drawRect(gap.getRect(), gapPaint); 
     }
@@ -91,18 +83,6 @@ class ParcourPainter extends CustomPainter {
       playerRect,
       Paint(),
     );
-
-    // horizontal scale on x axis with 50px steps
-    final horizontalLinePaint = Paint()..color = Colors.green;
-    for (double i = 0; i <= size.width; i += 50) {
-      canvas.drawLine(Offset(i, player.groundLevel - 10), Offset(i, player.groundLevel + 10), horizontalLinePaint);
-      textPainter.text = TextSpan(
-        text: i.toString(),
-        style: TextStyle(color: Colors.white, fontSize: 12),
-      );
-      textPainter.layout();
-      textPainter.paint(canvas, Offset(i - 10, player.groundLevel + 15));
-    }
   }
 
   @override

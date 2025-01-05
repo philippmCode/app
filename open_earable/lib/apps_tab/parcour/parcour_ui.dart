@@ -73,6 +73,7 @@ class _ParcourUIState extends State<ParcourUI> {
   // the images for all game elements
   late ui.Image playerImage;
   late ui.Image obstacleImage;
+  late ui.Image backgroundImage;
   bool pictureLoaded = false;
 
   // the currently active game elements
@@ -111,6 +112,11 @@ class _ParcourUIState extends State<ParcourUI> {
     // load the images
     _loadImage('lib/apps_tab/parcour/assets/Player.jpeg').then((image) {
       playerImage = image;
+      pictureLoaded = true;
+      print("Player image loaded: ${image.width}x${image.height}");
+    });
+    _loadImage('lib/apps_tab/parcour/assets/Skyline.jpeg').then((image) {
+      backgroundImage = image;
       pictureLoaded = true;
       print("Player image loaded: ${image.width}x${image.height}");
     });
@@ -457,6 +463,7 @@ void _resetGame() {
                     color: Theme.of(context).colorScheme.surface,
                     playerImage: playerImage,
                     obstacleImage: obstacleImage,
+                    backgroundImage: backgroundImage,
                   ),
                   child: Container(),
                 ),
