@@ -163,7 +163,6 @@ class _ParcourUIState extends State<ParcourUI> {
       );
 
       _calculateHeightData(filteredAccData);
-      print("wir sind hier fertig");
       setState(() {});
     });
   }
@@ -171,7 +170,6 @@ class _ParcourUIState extends State<ParcourUI> {
   /// Calculates the height of the jump.
   void _calculateHeightData(XYZValue accValue) {
 
-    print("gehen rein in die height data");
     // Subtract gravity to get acceleration due to movement.
     double currentAcc =
         accValue.z * cos(_pitch) + accValue.x * sin(_pitch) - _gravity;
@@ -210,32 +208,32 @@ class _ParcourUIState extends State<ParcourUI> {
     _dataSubscription?.cancel();
   }
 
-
-  void updateGame(double dt) {
-
-    if (!widget.gameState.isGameRunning) return; // Verhindere weitere Updates, wenn das Spiel gestoppt wurde
-    setState(() {
-
-      player.update(dt);
-
+  // update the platforms and remove those that are out of the screen
+  void updatePlatforms(double dt) {
       List<Platform> platformsToRemove = [];
       for (var platform in platforms) {
         platform.update(dt);
         if (platform.x < -platform.width) {
-          platformsToRemove.add(platform); // Füge das Hindernis zur Liste der zu entfernenden Hindernisse hinzu
+          platformsToRemove.add(platform);
         }
       }
       platforms.removeWhere((platform) => platformsToRemove.contains(platform));
+  }
 
+  // update the gaps and remove those that are out of the screen
+  void updateGaps(double dt) {
       List<Gap> gapsToRemove = [];
       for (var gap in gaps) {
         gap.update(dt);
         if (gap.x < -gap.width) {
-          gapsToRemove.add(gap); // Füge das Hindernis zur Liste der zu entfernenden Hindernisse hinzu
+          gapsToRemove.add(gap);
         }
       }
       gaps.removeWhere((gap) => gapsToRemove.contains(gap));
+  }
 
+  // update the obstacles and remove those that are out of the screen
+  void updateObstacles(double dt) {
       List<Obstacle> obstaclesToRemove = [];
       for (var obstacle in obstacles) {
         obstacle.update(dt);
@@ -244,12 +242,25 @@ class _ParcourUIState extends State<ParcourUI> {
         }
       }
       obstacles.removeWhere((obstacle) => obstaclesToRemove.contains(obstacle));
+  }
+
+  void updateGame(double dt) {
+
+    if (!widget.gameState.isGameRunning) return; // Verhindere weitere Updates, wenn das Spiel gestoppt wurde
+    setState(() {
+
+      player.update(dt);
+      updatePlatforms(dt);
+      updateGaps(dt);
+      updateObstacles(dt);
 
       //update the distance the player has covered
       widget.gameState.distance += (levelManager.getLevelSpeed() / 100) * dt;
 
+      // previous level is finished
       if (obstacles.isEmpty && platforms.isEmpty && gaps.isEmpty) {
         
+        // starting new scenario
         Scenario actualScenario = levelManager.getScenario();
 
         obstacles = actualScenario.obstacles.map((obstacle) => Obstacle(
@@ -274,16 +285,17 @@ class _ParcourUIState extends State<ParcourUI> {
           speed: gap.speed,
         ),).toList();
 
+        // if the new scenario is from a new level
         if (levelManager.getNewLevel()) {
             
-            // Zeige den Level-Text an
+            // display the level text
             distanceAtLevelStart = widget.gameState.distance;
             setState(() {
               showLevelText = true;
               levelText = "Level ${levelManager.levelId + 1 + levelManager.roundtTrips*levelManager.levels.length}";
             });
 
-            // Blende den Level-Text nach 1 Sekunde aus
+            // text is displayed for 1 second
             Timer(Duration(seconds: 1), () {
               setState(() {
                 showLevelText = false;
