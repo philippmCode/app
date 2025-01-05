@@ -75,6 +75,7 @@ class _ParcourUIState extends State<ParcourUI> {
   late ui.Image obstacleImage;
   late ui.Image backgroundImage;
   bool pictureLoaded = false;
+  double backgroundOffset = 0.0;
 
   // the currently active game elements
   List<Obstacle> obstacles = [];
@@ -259,6 +260,10 @@ class _ParcourUIState extends State<ParcourUI> {
       updatePlatforms(dt);
       updateGaps(dt);
       updateObstacles(dt);
+
+      if (backgroundOffset <= -MediaQuery.of(context).size.width) {
+        backgroundOffset = 0.0;
+      }
 
       //update the distance the player has covered
       widget.gameState.distance += (levelManager.getLevelSpeed() / 100) * dt;
@@ -447,6 +452,7 @@ void _resetGame() {
       double dt = timeNow - widget.gameState.lastUpdateTime;
       widget.gameState.lastUpdateTime = timeNow;
       updateGame(dt);
+      backgroundOffset -= 1;
     }
     return pictureLoaded
         ? Stack(
@@ -464,6 +470,7 @@ void _resetGame() {
                     playerImage: playerImage,
                     obstacleImage: obstacleImage,
                     backgroundImage: backgroundImage,
+                    backgroundOffset: backgroundOffset,
                   ),
                   child: Container(),
                 ),

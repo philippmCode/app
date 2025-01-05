@@ -17,7 +17,7 @@ class ParcourPainter extends CustomPainter {
   final ui.Image playerImage;
   final ui.Image obstacleImage;
   final ui.Image backgroundImage;
-  double backgroundOffset = 0;
+  final double backgroundOffset;
 
   ParcourPainter({
     required this.player,
@@ -28,6 +28,7 @@ class ParcourPainter extends CustomPainter {
     required this.playerImage,
     required this.obstacleImage,
     required this.backgroundImage,
+    required this.backgroundOffset,
   });
 
   @override
@@ -37,11 +38,19 @@ class ParcourPainter extends CustomPainter {
 
     final double backgroundHeight = 350;
     final double backgroundWidth = size.width;
-    final backgroundRect = Rect.fromLTWH(0, 0, backgroundWidth, backgroundHeight);
+    final backgroundRect = Rect.fromLTWH(backgroundOffset, 0, backgroundWidth, backgroundHeight);
     canvas.drawImageRect(
       backgroundImage,
       Rect.fromLTWH(0, 0, backgroundImage.width.toDouble(), backgroundImage.height.toDouble()),
       backgroundRect,
+      Paint(),
+    );
+
+    final backgroundRect2 = Rect.fromLTWH(backgroundOffset + backgroundWidth, 0, backgroundWidth, backgroundHeight);
+    canvas.drawImageRect(
+      backgroundImage,
+      Rect.fromLTWH(0, 0, backgroundImage.width.toDouble(), backgroundImage.height.toDouble()),
+      backgroundRect2,
       Paint(),
     );
 
@@ -88,5 +97,9 @@ class ParcourPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     return true;
+  }
+
+  bool backgroundReachedEnd() {
+    return backgroundOffset <= -backgroundImage.width;
   }
 }
