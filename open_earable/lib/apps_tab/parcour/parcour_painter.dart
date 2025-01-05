@@ -29,6 +29,9 @@ class ParcourPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+
+    print("painting");
+
     // 0-Linie zeichnen
     final zeroLinePaint = Paint()..color = Colors.black;
     canvas.drawLine(Offset(0, size.height / 2), Offset(size.width, size.height / 2), zeroLinePaint);

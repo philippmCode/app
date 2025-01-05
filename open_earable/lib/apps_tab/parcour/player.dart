@@ -129,7 +129,7 @@ class Player {
   }
 
   // check if player is in contact with the ground to prevent double jumps
-  bool hasGroundContanct() {
+  bool hasGroundContact() {
 
     print("enteredGap: $enteredGap, y: $y, groundLevel: $groundLevel, gapHeight: ${gap?.height}");
     print(y == groundLevel || (enteredGap && y == groundLevel + (gap?.height ?? 0)) || (enteredPlatform && y == (platform?.y ?? 0) - height));

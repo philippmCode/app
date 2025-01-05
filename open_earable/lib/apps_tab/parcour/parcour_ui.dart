@@ -12,7 +12,6 @@ import 'package:open_earable/apps_tab/parcour/scenario.dart';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:simple_kalman/simple_kalman.dart';
-import 'package:collection/collection.dart';
 import 'dart:math';
 import 'dart:core';
 import 'dart:ui' as ui;
@@ -36,8 +35,6 @@ class ParcourUI extends StatefulWidget {
 
 /// A class representing the state of a ParcourUI.
 class _ParcourUIState extends State<ParcourUI> {
-  /// The data of the chart.
-  late List<DataValue> _data;
 
   /// The subscription to the data.
   StreamSubscription? _dataSubscription;
@@ -100,7 +97,6 @@ class _ParcourUIState extends State<ParcourUI> {
   void initState() {
     print("init von parcour_chart");
     super.initState();
-    _data = [];
     double screenWidth = MediaQuery.of(context).size.width; // Breite des Bildschirms
     levelManager = LevelManager(screenWidth: screenWidth);
     _setupListeners();
@@ -136,6 +132,7 @@ class _ParcourUIState extends State<ParcourUI> {
       
   /// Sets up the listeners for the data.
   void _setupListeners() {
+    print("setupListeners");
     _kalmanX = SimpleKalman(
       errorMeasure: _errorMeasureAcc,
       errorEstimate: _errorMeasureAcc,
@@ -165,13 +162,15 @@ class _ParcourUIState extends State<ParcourUI> {
         units: {"X": "m/s²", "Y": "m/s²", "Z": "m/s²"},
       );
 
-      DataValue height = _calculateHeightData(filteredAccData);
-      _updateData(height);
+      _calculateHeightData(filteredAccData);
+      print("wir sind hier fertig");
     });
   }
 
   /// Calculates the height of the jump.
-  DataValue _calculateHeightData(XYZValue accValue) {
+  void _calculateHeightData(XYZValue accValue) {
+
+    print("gehen rein in die height data");
     // Subtract gravity to get acceleration due to movement.
     double currentAcc =
         accValue.z * cos(_pitch) + accValue.x * sin(_pitch) - _gravity;
@@ -198,26 +197,11 @@ class _ParcourUIState extends State<ParcourUI> {
     // Prevent height from going negative.
     _height = max(0, _height);
 
-    if (_height > 0.1 && player.hasGroundContanct()) {
+    if (_height > 0.1 && player.hasGroundContact()) {
       player.jump();
     }
-
-    return Jump(
-      DateTime.fromMillisecondsSinceEpoch(accValue._timestamp),
-      _height,
-    );
   }
 
-  /// Updates the data of the chart.
-  void _updateData(DataValue value) {
-    setState(() {
-      _data.add(value);
-      DataValue? minXYZValue = minBy(_data, (DataValue b) => b.getMin());
-      if (minXYZValue == null) {
-        return;
-      }
-    });
-  }
 
   @override
   void dispose() {
@@ -545,39 +529,5 @@ class XYZValue extends DataValue {
   @override
   String toString() {
     return "timestamp: $_timestamp\nx: $x, y: $y, z: $z";
-  }
-}
-
-/// A class representing a jump with a time and height.
-class Jump extends DataValue {
-  
-  /// The time of the jump.
-  final DateTime _time;
-
-  /// The height of the jump.
-  final double _height;
-
-  /// Constructs a Jump object with a time and height.
-  Jump(DateTime time, double height)
-      : _time = time,
-        _height = height,
-        super(
-          timestamp: time.millisecondsSinceEpoch,
-          units: {'height': 'meters'},
-        );
-
-  @override
-  double getMin() {
-    return 0.0;
-  }
-
-  @override
-  double getMax() {
-    return _height;
-  }
-
-  @override
-  String toString() {
-    return "timestamp: ${_time.millisecondsSinceEpoch}\nheight $_height";
   }
 }
