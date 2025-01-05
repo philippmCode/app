@@ -3,6 +3,7 @@ import 'package:open_earable/apps_tab/parcour/obstacle.dart';
 import 'package:open_earable/apps_tab/parcour/platform.dart';
 import 'package:open_earable/apps_tab/parcour/scenario.dart';
 
+// manages which level and scenario is currently active
 class LevelManager {
 
   List<Level> levels = [];
@@ -13,6 +14,7 @@ class LevelManager {
   bool newLevel = false;
 
   LevelManager({
+    // the game elements are spwaned directly next to the screen
     required this.screenWidth,
   }) {
     // fill the list with predefined levels
@@ -48,6 +50,7 @@ class LevelManager {
     levels = _predefinedLevels(screenWidth);
   }
 
+  // the speed for all scenarios in the level used then to calculate the distance the player has covered
   int getLevelSpeed() {
     return levels[levelId].speed;
   }
@@ -58,6 +61,7 @@ class LevelManager {
   }
 }
 
+// Class representing a level in the game
 class Level {
   final int id;
   final List<Scenario> scenarios;
@@ -70,6 +74,7 @@ class Level {
   });
 }
 
+// returns a list of predefined levels
 List<Level> _predefinedLevels(double screenWidth) => [
   Level(
     id: 0,
@@ -78,7 +83,7 @@ List<Level> _predefinedLevels(double screenWidth) => [
     ),
 ];
 
-
+// returns a list of predefined scenarios
 List<Scenario> _predefinedScenarios(double screenWidth) => [
 
   Scenario(
@@ -86,7 +91,7 @@ List<Scenario> _predefinedScenarios(double screenWidth) => [
     length: 2000,
     obstacles: [
       Obstacle(
-          x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
+          x: screenWidth,
           y: 300,
           width: 50,
           height: 50,
@@ -171,7 +176,7 @@ List<Scenario> _predefinedScenarios(double screenWidth) => [
         width: 50,
         height: 50,
         speed: 300,
-      )],
+      ),],
   platforms: [
     Platform(x: screenWidth, y: 200, width: 300, height: 25, speed: 300),
     Platform(x: screenWidth + 450, y: 200, width: 300, height: 25, speed: 300),

@@ -17,24 +17,24 @@ import 'dart:math';
 import 'dart:core';
 import 'dart:ui' as ui;
 
-/// class representing the ParcourChart
+/// A class representing the ParcourUI.
 class ParcourUI extends StatefulWidget {
 
   final OpenEarable openEarable;
   final GameState gameState;
   final ParcourState parcourState;
 
-  /// The title of the chart.
+  /// The title of the page.
   final String title;
 
-  /// Constructs a ParcourChart object with a title, openEarable, gameState, and parcourState.
+  /// Constructs a ParcourUI object with a title, openEarable, gameState, and parcourState.
   const ParcourUI(this.parcourState, this.gameState, this.openEarable, this.title, {super.key});
 
   @override
   State<ParcourUI> createState() => _ParcourUIState();
 }
 
-/// A class representing the state of a ParcourChart.
+/// A class representing the state of a ParcourUI.
 class _ParcourUIState extends State<ParcourUI> {
   /// The data of the chart.
   late List<DataValue> _data;
@@ -94,7 +94,7 @@ class _ParcourUIState extends State<ParcourUI> {
     levelManager = LevelManager(screenWidth: screenWidth);
     _setupListeners();
       player = Player(
-        x: 275,
+        x: 350,
         y: 300,
         width: 50,
         height: 50,
@@ -418,7 +418,7 @@ void _resetGame() {
   setState(() {
     //print("resetting game");
     player = Player(
-      x: 275,
+      x: 350,
       y: 300,
       width: 50,
       height: 50,

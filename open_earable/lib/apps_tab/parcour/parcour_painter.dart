@@ -6,6 +6,7 @@ import 'package:open_earable/apps_tab/parcour/obstacle.dart';
 import 'package:open_earable/apps_tab/parcour/player.dart';
 import 'package:open_earable/apps_tab/parcour/platform.dart';
 
+// CustomPainter for the Parcour game
 class ParcourPainter extends CustomPainter {
 
   final Player player;
