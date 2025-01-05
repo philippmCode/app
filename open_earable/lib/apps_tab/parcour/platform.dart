@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+// Class representing a platform in the game
 class Platform {
   double x;
   double y;
@@ -19,6 +20,7 @@ class Platform {
     x -= speed * dt;
   }
 
+  // returns the rectangle of the platform
   Rect getRect() {
     return Rect.fromLTWH(x, y, width, height);
   }

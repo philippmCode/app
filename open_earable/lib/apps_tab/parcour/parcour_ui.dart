@@ -69,21 +69,32 @@ class _ParcourUIState extends State<ParcourUI> {
   /// The height of the jump.
   double _height = 0.0;
 
+  // the player object
   late Player player;
-  List<Obstacle> obstacles = [];
-  List<Platform> platforms = [];
-  List<Gap> gaps = [];
-  double lastUpdateTime = 0.0;
-  bool enteredPlatform = false;
-  bool enteredGap = false;
-  late LevelManager levelManager;
+  late Rect playerRect;
+
+  // the images for all game elements
   late ui.Image playerImage;
   late ui.Image obstacleImage;
   bool pictureLoaded = false;
-  bool showLevelText = false;
-  String levelText = "";
+
+  // the currently active game elements
+  List<Obstacle> obstacles = [];
+  List<Platform> platforms = [];
+  List<Gap> gaps = [];
+
+  // describe the situation of the player
+  bool enteredPlatform = false;
+  bool enteredGap = false;
   double progress = 0.0;
   double distanceAtLevelStart = 0.0;
+
+  // the game mechanics
+  late LevelManager levelManager;
+  double lastUpdateTime = 0.0;
+  bool showLevelText = false;
+  String levelText = "";
+
 
   @override
   void initState() {
@@ -100,7 +111,8 @@ class _ParcourUIState extends State<ParcourUI> {
         height: 50,
         groundLevel: 300,
     );
-    // Lade die Bilder
+    playerRect = player.getRect();
+    // load the images
     _loadImage('lib/apps_tab/parcour/assets/Player.jpeg').then((image) {
       playerImage = image;
       pictureLoaded = true;
@@ -114,6 +126,7 @@ class _ParcourUIState extends State<ParcourUI> {
 
   }
 
+  // load the image from the assets
   Future<ui.Image> _loadImage(String asset) async {
     final ByteData data = await rootBundle.load(asset);
     final Completer<ui.Image> completer = Completer();
@@ -302,20 +315,20 @@ class _ParcourUIState extends State<ParcourUI> {
       setState(() {
         progress = ((levelManager.scenarioId -1) / levelManager.levels[levelManager.levelId].scenarios.length);
       });
+      playerRect = player.getRect();
       checkGap();
       checkPlatform();
       checkCollisions();
     });
   }
 
+  // check if the player is over a gap
   void checkGap() {
 
     for (var gap in gaps) {
 
-      var playerRect = player.getRect();
       var gapRect = gap.getRect();
 
-      // Prüfen, ob der Spieler über der Plattform ist (nicht Berührung, sondern oberhalb)
       bool isOverGap = playerRect.right > gapRect.left && playerRect.right < gapRect.right;
 
       if (isOverGap && !enteredGap) {
@@ -331,14 +344,13 @@ class _ParcourUIState extends State<ParcourUI> {
     }
   }
 
+  // check if the player is over a platform
   void checkPlatform() {
 
     for (var platform in platforms) {
 
-      var playerRect = player.getRect();
       var platformRect = platform.getRect();
 
-      // Prüfen, ob der Spieler über der Plattform ist (nicht Berührung, sondern oberhalb)
       bool isOverPlatform = playerRect.bottom <= platformRect.top &&
                             playerRect.right > platformRect.left &&
                             playerRect.left < platformRect.right;
@@ -356,6 +368,7 @@ class _ParcourUIState extends State<ParcourUI> {
     }
   }
 
+  // check if the player collides with an obstacle or the right side of a gap
   void checkCollisions() {
 
     for (var obstacle in obstacles) {
@@ -369,8 +382,8 @@ class _ParcourUIState extends State<ParcourUI> {
     ///player collides right side of the gap
     for (var gap in gaps) {
       if (player.getRect().right >= gap.getRect().right &&
-      player.getRect().left < gap.getRect().right && // Spieler ist noch innerhalb des Gaps auf der linken Seite
-      player.getRect().bottom >= gap.getRect().top && // Spieler ist nicht unterhalb des Gaps
+      player.getRect().left < gap.getRect().right && // player has not yet entered the gap
+      player.getRect().bottom >= gap.getRect().top && // player is at the same height as the gap
       player.getRect().top <= gap.getRect().bottom) {
         print("gap collision detected");
         print("player right: ${player.getRect().right}");
@@ -382,9 +395,10 @@ class _ParcourUIState extends State<ParcourUI> {
       }
     }
   }
-
+  
+  // handle the collision
   void _handleCollision() {
-  // Beispiel: Zeige eine Nachricht an und setze den Spielzustand zurück
+
     print("collision detected");
     levelManager.reset();
     widget.gameState.endGameState();
@@ -414,9 +428,9 @@ class _ParcourUIState extends State<ParcourUI> {
   );
 }
 
+// reset the game
 void _resetGame() {
   setState(() {
-    //print("resetting game");
     player = Player(
       x: 350,
       y: 300,
@@ -432,11 +446,9 @@ void _resetGame() {
   Widget build(BuildContext context) {
   
     if (widget.gameState.isGameRunning) {
-      double timeNow = widget.gameState.currentTime;
-      //print("currentTime: $timeNow" "lastUpdateTime: ${widget.gameState.lastUpdateTime}");  
+      double timeNow = widget.gameState.currentTime; 
       double dt = timeNow - widget.gameState.lastUpdateTime;
       widget.gameState.lastUpdateTime = timeNow;
-      //print("dt setzen: $dt");
       updateGame(dt);
     }
     return pictureLoaded
@@ -467,9 +479,9 @@ void _resetGame() {
           ),
           if (showLevelText) 
             Align(
-              alignment: Alignment.topCenter, // Positioniere den Text oben
+              alignment: Alignment.topCenter, 
               child: Padding(
-                padding: const EdgeInsets.only(top: 20.0), // Verschiebe den Text nach unten
+                padding: const EdgeInsets.only(top: 20.0), // move text down
                 child: Container(
                   padding: EdgeInsets.all(16.0),
                   color: Colors.black54,
