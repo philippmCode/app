@@ -78,7 +78,7 @@ class Level {
 List<Level> _predefinedLevels(double screenWidth) => [
   Level(
     id: 0,
-    scenarios: [_predefinedScenarios(screenWidth)[3] ,_predefinedScenarios(screenWidth)[4]],
+    scenarios: [_predefinedScenarios(screenWidth)[5], _predefinedScenarios(screenWidth)[6]],
     speed: 300,
     ),
 ];
@@ -126,7 +126,7 @@ List<Scenario> _predefinedScenarios(double screenWidth) => [
     screenWidth: screenWidth,
   ),
   Scenario(
-    name: 'Singe gap',
+    name: 'Single gap',
     length: 3000,
     obstacles: [],
     platforms: [],
@@ -182,6 +182,47 @@ List<Scenario> _predefinedScenarios(double screenWidth) => [
     Platform(x: screenWidth + 450, y: 200, width: 300, height: 25, speed: 300),
   ],
   gaps: [],
+  screenWidth: screenWidth,
+  ),
+  Scenario(
+    name: 'Obstacle after Gap',
+    length: 3000,
+    obstacles: [      
+      Obstacle(
+        x: screenWidth + 400, // Setze die x-Position auf die Breite des Bildschirms
+        y: 300,
+        width: 50,
+        height: 50,
+        speed: 300,
+      )],
+    platforms: [],
+    gaps: [
+      Gap(x: screenWidth, y: 350, width: 400, height: 50, speed: 300),
+  ],
+  screenWidth: screenWidth,
+  ),
+  Scenario(
+    name: 'Obstacles surrouding Gap',
+    length: 3000,
+    obstacles: [      
+      Obstacle(
+        x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
+        y: 300,
+        width: 50,
+        height: 50,
+        speed: 300,
+      ),
+      Obstacle(
+        x: screenWidth + 550, // Setze die x-Position auf die Breite des Bildschirms
+        y: 300,
+        width: 50,
+        height: 50,
+        speed: 300,
+      )],
+    platforms: [],
+    gaps: [
+      Gap(x: screenWidth + 50, y: 350, width: 500, height: 50, speed: 300),
+  ],
   screenWidth: screenWidth,
   ),
 ];
