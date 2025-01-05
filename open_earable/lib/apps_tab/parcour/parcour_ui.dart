@@ -434,14 +434,10 @@ void _resetGame() {
   @override
   Widget build(BuildContext context) {
   
-    print("parcour chart building");
     if (widget.gameState.isGameRunning) {
-      print("picture was loaded");
       double timeNow = widget.gameState.currentTime;
-      //print("currentTime: $timeNow" "lastUpdateTime: ${widget.gameState.lastUpdateTime}");  
       double dt = timeNow - widget.gameState.lastUpdateTime;
       widget.gameState.lastUpdateTime = timeNow;
-      //print("dt setzen: $dt");
       updateGame(dt);
     }
     return pictureLoaded

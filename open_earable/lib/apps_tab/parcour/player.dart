@@ -40,12 +40,14 @@ class Player {
   }
 
   void enterPlatform(Platform platform) {
+    print("enter platform");
     enteredPlatform = true;
     this.platform = platform;
     isJumping = false;
   }
 
   void leavePlatform() {
+    print("leave platform");
     enteredPlatform = false;
     platform = null;
   }

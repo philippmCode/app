@@ -37,7 +37,6 @@ class LevelManager {
     else {
       newLevel = false;
     }
-    print("Level: $levelId, Scenario: $scenarioId");
     return levels[levelId].scenarios[scenarioId++];
   }
 
@@ -82,6 +81,7 @@ List<Level> _predefinedLevels(double screenWidth) => [
     scenarios: [_predefinedScenarios(screenWidth)[2], _predefinedScenarios(screenWidth)[3]],
     speed: 300,
     ),
+  Level(id: 2, scenarios: [_predefinedScenarios(screenWidth)[4]], speed: 300)  
 ];
 
 
@@ -142,6 +142,45 @@ List<Scenario> _predefinedScenarios(double screenWidth) => [
     obstacles: [],
     platforms: [
       Platform(x: screenWidth, y: 200, width: 300, height: 25, speed: 300),
+  ],
+  gaps: [],
+  screenWidth: screenWidth,
+  ),
+  Scenario(
+  name: 'Obstacles between platforms 300',
+  length: 3000,
+  obstacles: [   
+      Obstacle(
+      x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
+      y: 300,
+      width: 50,
+      height: 50,
+      speed: 300,
+    ),   
+    Obstacle(
+        x: screenWidth + 300, // Setze die x-Position auf die Breite des Bildschirms
+        y: 300,
+        width: 50,
+        height: 50,
+        speed: 300,
+      ),
+            Obstacle(
+        x: screenWidth + 300 + 50, // Setze die x-Position auf die Breite des Bildschirms
+        y: 300,
+        width: 50,
+        height: 50,
+        speed: 300,
+      ),
+      Obstacle(
+        x: screenWidth + 300 + 100, // Setze die x-Position auf die Breite des Bildschirms
+        y: 300,
+        width: 50,
+        height: 50,
+        speed: 300,
+      )],
+  platforms: [
+    Platform(x: screenWidth, y: 200, width: 300, height: 25, speed: 300),
+    Platform(x: screenWidth + 400, y: 200, width: 300, height: 25, speed: 300),
   ],
   gaps: [],
   screenWidth: screenWidth,
