@@ -93,9 +93,14 @@ class ParcourPainter extends CustomPainter {
     }
 
     //draw platforms
-    final platformPaint = Paint()..color = Colors.green;
     for (var platform in platforms) {
-      canvas.drawRect(platform.getRect(), platformPaint);
+      final platformRect = platform.getRect();
+      canvas.drawImageRect(
+        groundImage,
+        Rect.fromLTWH(0, 0, groundImage.width.toDouble(), groundImage.height.toDouble()),
+        platformRect,
+        Paint(),
+      );
     }
 
     // Spieler zeichnen
