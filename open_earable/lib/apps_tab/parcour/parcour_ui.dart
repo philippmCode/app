@@ -9,9 +9,7 @@ import 'package:open_earable/apps_tab/parcour/parcour.dart';
 import 'package:open_earable/apps_tab/parcour/player.dart';
 import 'package:open_earable/apps_tab/parcour/platform.dart';
 import 'package:open_earable/apps_tab/parcour/scenario.dart';
-import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:simple_kalman/simple_kalman.dart';
 import 'dart:math';
 import 'dart:core';
 import 'dart:ui' as ui;
@@ -19,7 +17,6 @@ import 'dart:ui' as ui;
 /// A class representing the ParcourUI.
 class ParcourUI extends StatefulWidget {
 
-  final OpenEarable openEarable;
   final GameState gameState;
   final ParcourState parcourState;
 
@@ -27,7 +24,7 @@ class ParcourUI extends StatefulWidget {
   final String title;
 
   /// Constructs a ParcourUI object with a title, openEarable, gameState, and parcourState.
-  const ParcourUI(this.parcourState, this.gameState, this.openEarable, this.title, {super.key});
+  const ParcourUI(this.parcourState, this.gameState, this.title, {super.key});
 
   @override
   State<ParcourUI> createState() => _ParcourUIState();
@@ -38,18 +35,6 @@ class _ParcourUIState extends State<ParcourUI> {
 
   /// The subscription to the data.
   StreamSubscription? _dataSubscription;
-
-  /// The error measure of the Kalman filter.
-  final _errorMeasureAcc = 5.0;
-
-  /// The Kalman filter for the x value.
-  late SimpleKalman _kalmanX;
-
-  /// The Kalman filter for the y value.
-  late SimpleKalman _kalmanY;
-
-  /// The Kalman filter for the z value.
-  late SimpleKalman _kalmanZ;
 
   /// The velocity of the device.
   double _velocity = 0.0;
@@ -74,6 +59,7 @@ class _ParcourUIState extends State<ParcourUI> {
   late ui.Image playerImage;
   late ui.Image obstacleImage;
   late ui.Image backgroundImage;
+  late ui.Image groundImage;
   bool pictureLoaded = false;
   double backgroundOffset = 0.0;
 
@@ -101,7 +87,6 @@ class _ParcourUIState extends State<ParcourUI> {
     super.initState();
     double screenWidth = MediaQuery.of(context).size.width; // Breite des Bildschirms
     levelManager = LevelManager(screenWidth: screenWidth);
-    _setupListeners();
       player = Player(
         x: 350,
         y: 300,
@@ -126,7 +111,11 @@ class _ParcourUIState extends State<ParcourUI> {
       pictureLoaded = true;
       print("Obstacle image loaded: ${image.width}x${image.height}");
     });
-
+    _loadImage('lib/apps_tab/parcour/assets/Ground.jpg').then((image) {
+      groundImage = image;
+      pictureLoaded = true;
+      print("Obstacle image loaded: ${image.width}x${image.height}");
+    });
   }
 
   // load the image from the assets
@@ -137,42 +126,6 @@ class _ParcourUIState extends State<ParcourUI> {
     return completer.future;
   }
       
-  /// Sets up the listeners for the data.
-  void _setupListeners() {
-    print("setupListeners");
-    _kalmanX = SimpleKalman(
-      errorMeasure: _errorMeasureAcc,
-      errorEstimate: _errorMeasureAcc,
-      q: 0.9,
-    );
-    _kalmanY = SimpleKalman(
-      errorMeasure: _errorMeasureAcc,
-      errorEstimate: _errorMeasureAcc,
-      q: 0.9,
-    );
-    _kalmanZ = SimpleKalman(
-      errorMeasure: _errorMeasureAcc,
-      errorEstimate: _errorMeasureAcc,
-      q: 0.9,
-    );
-    _dataSubscription = widget.openEarable.sensorManager
-        .subscribeToSensorData(0)
-        .listen((data) {
-      int timestamp = data["timestamp"];
-      _pitch = data["EULER"]["PITCH"];
-
-      XYZValue filteredAccData = XYZValue(
-        timestamp: timestamp,
-        x: _kalmanX.filtered(data["ACC"]["X"]),
-        y: _kalmanY.filtered(data["ACC"]["Y"]),
-        z: _kalmanZ.filtered(data["ACC"]["Z"]),
-        units: {"X": "m/s²", "Y": "m/s²", "Z": "m/s²"},
-      );
-
-      _calculateHeightData(filteredAccData);
-      setState(() {});
-    });
-  }
 
   /// Calculates the height of the jump.
   void _calculateHeightData(XYZValue accValue) {
@@ -471,6 +424,7 @@ void _resetGame() {
                     playerImage: playerImage,
                     obstacleImage: obstacleImage,
                     backgroundImage: backgroundImage,
+                    groundImage: groundImage,
                     backgroundOffset: backgroundOffset,
                   ),
                   child: Container(),
@@ -479,7 +433,7 @@ void _resetGame() {
               LinearProgressIndicator(
                 value: progress,
                 backgroundColor: Colors.grey,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.yellow),
               ),
             ],
           ),

@@ -78,7 +78,7 @@ class Level {
 List<Level> _predefinedLevels(double screenWidth) => [
   Level(
     id: 0,
-    scenarios: [_predefinedScenarios(screenWidth)[0], _predefinedScenarios(screenWidth)[1]],
+    scenarios: [_predefinedScenarios(screenWidth)[6], _predefinedScenarios(screenWidth)[1]],
     speed: 300,
   ),
   Level(
@@ -209,7 +209,7 @@ List<Scenario> _predefinedScenarios(double screenWidth) => [
         width: 50,
         height: 50,
         speed: 300,
-      )],
+      ),],
     platforms: [],
     gaps: [
       Gap(x: screenWidth, y: 350, width: 400, height: 50, speed: 300),
@@ -233,7 +233,7 @@ List<Scenario> _predefinedScenarios(double screenWidth) => [
         width: 50,
         height: 50,
         speed: 300,
-      )],
+      ),],
     platforms: [],
     gaps: [
       Gap(x: screenWidth + 50, y: 350, width: 500, height: 50, speed: 300),

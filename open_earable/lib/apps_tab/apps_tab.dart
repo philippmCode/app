@@ -44,7 +44,7 @@ class AppsTab extends StatelessWidget {
               builder: (context) => Material(
                 child: Theme(
                   data: materialTheme,
-                  child: Parcour(openEarable),
+                  child: Parcour(),
                 ),
               ),
             ),

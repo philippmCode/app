@@ -17,6 +17,7 @@ class ParcourPainter extends CustomPainter {
   final ui.Image playerImage;
   final ui.Image obstacleImage;
   final ui.Image backgroundImage;
+  final ui.Image groundImage;
   final double backgroundOffset;
 
   ParcourPainter({
@@ -28,6 +29,7 @@ class ParcourPainter extends CustomPainter {
     required this.playerImage,
     required this.obstacleImage,
     required this.backgroundImage,
+    required this.groundImage,
     required this.backgroundOffset,
   });
 
@@ -55,11 +57,21 @@ class ParcourPainter extends CustomPainter {
       Paint(),
     );
 
-    // Zeichne die Fläche unter der 0-Linie grün
-    final greenPaint = Paint()..color = Colors.green;
-    canvas.drawRect(
-      Rect.fromLTRB(0, 350, size.width, size.height),
-      greenPaint,
+    final groundRect = Rect.fromLTWH(backgroundOffset, 350, size.width, size.height - 350);
+    canvas.drawImageRect(
+      groundImage,
+      Rect.fromLTWH(0, 350, size.width, size.height - 350),
+      groundRect,
+      Paint(),
+    );
+
+    // draw second background image
+    final roundRect2 = Rect.fromLTWH(backgroundOffset + backgroundWidth, 350, size.width, size.height - 350);
+    canvas.drawImageRect(
+      groundImage,
+      Rect.fromLTWH(0, 350, size.width, size.height - 350),
+      roundRect2,
+      Paint(),
     );
 
     // draw obstacles

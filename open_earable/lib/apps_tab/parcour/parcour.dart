@@ -4,15 +4,13 @@ import 'dart:async';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'package:simple_kalman/simple_kalman.dart';
 import 'dart:math';
-import 'package:open_earable/shared/earable_not_connected_warning.dart';
 
 /// A game where you steer the player using the OpenEarable device.
 class Parcour extends StatefulWidget {
   /// Instance of OpenEarable device.
-  final OpenEarable openEarable;
 
   /// Constructs a Parcour instance widget with a given OpenEarable device.
-  const Parcour(this.openEarable, {super.key});
+  const Parcour({super.key});
 
   /// state for the Parcour widget.
   @override
@@ -114,15 +112,9 @@ class ParcourState extends State<Parcour>
   @override
   void initState() {
     super.initState();
-    // Set up listeners for sensor data.
-    if (widget.openEarable.bleManager.connected) {
-      // Set sampling rate to maximum.
-      widget.openEarable.sensorManager.writeSensorConfig(_buildSensorConfig());
-      // Initialize Kalman filters.
-      _initializeKalmanFilters();
-      _setupListeners();
-      _earableConnected = true;
-    }
+
+    _earableConnected = true;
+    
   }
 
   /// Disposes IMU data subscription when the state object is removed.
@@ -130,23 +122,6 @@ class ParcourState extends State<Parcour>
   void dispose() {
     super.dispose();
     _imuSubscription?.cancel();
-  }
-
-  /// Sets up listeners to receive sensor data from the OpenEarable device.
-  void _setupListeners() {
-    ///print("Setting up listeners");
-    _imuSubscription = widget.openEarable.sensorManager
-        .subscribeToSensorData(0)
-        .listen((data) {
-      // Only process sensor data if the game is ongoing.
-      if (!_gameActive) {
-        return;
-      }
-      setState(() {
-      });
-      ///print("calling to process Sensor Data");
-      _processSensorData(data);
-    });
   }
 
   /// Starts the jump height measurement process.
@@ -270,9 +245,7 @@ class ParcourState extends State<Parcour>
       body: Column(
         children: [
         Expanded(
-          child: (!widget.openEarable.bleManager.connected)
-              ? EarableNotConnectedWarning()
-              : ParcourUI(this, gameState, widget.openEarable, "Parcour"),
+          child: ParcourUI(this, gameState, "Parcour"),
         ),
           SizedBox(height: 20), // Margin between chart and button
         Align(
@@ -318,34 +291,33 @@ class ParcourState extends State<Parcour>
     );
   }
 
-  Widget _buildButtons() {
-    return ElevatedButton(
-      onPressed: _earableConnected
-          ? () {
-              if (!_gameActive) {
-                _startGame(); // Spiel starten
-              } else if (_pausedGame) {
-                resumeGame(); // Spiel fortsetzen
-              } else {
-                pauseGame(); // Spiel pausieren
-              }
-            }
-          : null,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: !_gameActive
-            ? Colors.greenAccent // Start
-            : _pausedGame
-                ? Colors.green // Pausiert
-                : Colors.red, // Aktiv
-        foregroundColor: Theme.of(context).colorScheme.surface,
-      ),
-      child: Text(!_gameActive
-          ? 'Set Baseline & Start Game'
+Widget _buildButtons() {
+  return ElevatedButton(
+    onPressed: () {
+      // Bedingungen für die verschiedenen Zustände des Spiels
+      if (!_gameActive) {
+        _startGame(); // Spiel starten
+      } else if (_pausedGame) {
+        resumeGame(); // Spiel fortsetzen
+      } else {
+        pauseGame(); // Spiel pausieren
+      }
+    },
+    style: ElevatedButton.styleFrom(
+      backgroundColor: !_gameActive
+          ? Colors.greenAccent // Start
           : _pausedGame
-              ? 'Resume Game'
-              : 'Pause Game',),
-    );
-  }
+              ? Colors.green // Pausiert
+              : Colors.red, // Aktiv
+      foregroundColor: Theme.of(context).colorScheme.surface,
+    ),
+    child: Text(!_gameActive
+        ? 'Set Baseline & Start Game'
+        : _pausedGame
+            ? 'Resume Game'
+            : 'Pause Game'),
+  );
+}
 
 
   /// Builds a sensor configuration for the OpenEarable device.
