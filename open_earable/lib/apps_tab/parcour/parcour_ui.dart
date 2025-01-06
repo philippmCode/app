@@ -101,7 +101,7 @@ class _ParcourUIState extends State<ParcourUI> {
       pictureLoaded = true;
       print("Player image loaded: ${image.width}x${image.height}");
     });
-    _loadImage('lib/apps_tab/parcour/assets/Skyline.jpeg').then((image) {
+    _loadImage('lib/apps_tab/parcour/assets/Skyline.jpg').then((image) {
       backgroundImage = image;
       pictureLoaded = true;
       print("Player image loaded: ${image.width}x${image.height}");
@@ -444,7 +444,7 @@ void _resetGame() {
                 padding: const EdgeInsets.only(top: 20.0), // move text down
                 child: Container(
                   padding: EdgeInsets.all(16.0),
-                  color: Colors.black54,
+                  color: Colors.black,
                   child: Text(
                     levelText,
                     style: TextStyle(
