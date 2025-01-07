@@ -79,6 +79,12 @@ class ParcourPainter extends CustomPainter {
       Paint(),
     );
 
+    final whitePaint = Paint()..color = Colors.white;
+    canvas.drawRect(
+      Rect.fromLTRB(0, 400, size.width, size.height),
+      whitePaint,
+    );
+
     // draw obstacles
     for (var obstacle in obstacles) {
       final obstacleRect = obstacle.getRect();

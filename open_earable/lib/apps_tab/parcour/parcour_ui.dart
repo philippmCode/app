@@ -98,7 +98,7 @@ class _ParcourUIState extends State<ParcourUI> {
     );
     playerRect = player.getRect();
     // load the images
-    _loadImage('lib/apps_tab/parcour/assets/Player.jpeg').then((image) {
+    _loadImage('lib/apps_tab/parcour/assets/Player.png').then((image) {
       playerImage = image;
       pictureLoaded = true;
     });
