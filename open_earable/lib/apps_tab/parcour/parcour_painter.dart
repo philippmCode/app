@@ -18,6 +18,8 @@ class ParcourPainter extends CustomPainter {
   final ui.Image obstacleImage;
   final ui.Image backgroundImage;
   final ui.Image groundImage;
+  final ui.Image gapImage;
+  final ui.Image platformImage;
   final double backgroundOffset;
 
   ParcourPainter({
@@ -30,6 +32,8 @@ class ParcourPainter extends CustomPainter {
     required this.obstacleImage,
     required this.backgroundImage,
     required this.groundImage,
+    required this.gapImage,
+    required this.platformImage,
     required this.backgroundOffset,
   });
 
@@ -38,7 +42,7 @@ class ParcourPainter extends CustomPainter {
 
     print("painting");
 
-    final double backgroundHeight = 350;
+    final double backgroundHeight = 351;
     final double backgroundWidth = size.width;
     final backgroundRect = Rect.fromLTWH(backgroundOffset, 0, backgroundWidth, backgroundHeight);
     canvas.drawImageRect(
@@ -57,7 +61,7 @@ class ParcourPainter extends CustomPainter {
       Paint(),
     );
 
-    final double groundHeight = size.height - 350;
+    final double groundHeight = size.height - 345;
     final groundRect = Rect.fromLTWH(backgroundOffset, 350, backgroundWidth, groundHeight);
     canvas.drawImageRect(
       groundImage,
@@ -87,17 +91,22 @@ class ParcourPainter extends CustomPainter {
     }
 
     //draw gaps
-    final gapPaint = Paint()..color = Colors.white;
     for (var gap in gaps) {
-      canvas.drawRect(gap.getRect(), gapPaint); 
+      final gapRect = gap.getRect();
+      canvas.drawImageRect(
+        gapImage,
+        Rect.fromLTWH(0, 0, gapImage.width.toDouble(), gapImage.height.toDouble()),
+        gapRect,
+        Paint(),
+      );
     }
 
     //draw platforms
     for (var platform in platforms) {
       final platformRect = platform.getRect();
       canvas.drawImageRect(
-        groundImage,
-        Rect.fromLTWH(0, 0, groundImage.width.toDouble(), groundImage.height.toDouble()),
+        platformImage,
+        Rect.fromLTWH(0, 0, platformImage.width.toDouble(), platformImage.height.toDouble()),
         platformRect,
         Paint(),
       );

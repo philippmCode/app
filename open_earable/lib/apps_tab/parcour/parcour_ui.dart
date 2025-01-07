@@ -60,6 +60,8 @@ class _ParcourUIState extends State<ParcourUI> {
   late ui.Image obstacleImage;
   late ui.Image backgroundImage;
   late ui.Image groundImage;
+  late ui.Image gapImage;
+  late ui.Image platformImage;
   bool pictureLoaded = false;
   double backgroundOffset = 0.0;
 
@@ -99,22 +101,26 @@ class _ParcourUIState extends State<ParcourUI> {
     _loadImage('lib/apps_tab/parcour/assets/Player.jpeg').then((image) {
       playerImage = image;
       pictureLoaded = true;
-      print("Player image loaded: ${image.width}x${image.height}");
     });
-    _loadImage('lib/apps_tab/parcour/assets/Skyline.jpg').then((image) {
+    _loadImage('lib/apps_tab/parcour/assets/Skyline.jpeg').then((image) {
       backgroundImage = image;
       pictureLoaded = true;
-      print("Player image loaded: ${image.width}x${image.height}");
     });
-    _loadImage('lib/apps_tab/parcour/assets/Obstacle.jpg').then((image) {
+    _loadImage('lib/apps_tab/parcour/assets/Obstacle.png').then((image) {
       obstacleImage = image;
       pictureLoaded = true;
-      print("Obstacle image loaded: ${image.width}x${image.height}");
     });
-    _loadImage('lib/apps_tab/parcour/assets/Ground.jpg').then((image) {
+    _loadImage('lib/apps_tab/parcour/assets/Ground.jpeg').then((image) {
       groundImage = image;
       pictureLoaded = true;
-      print("Obstacle image loaded: ${image.width}x${image.height}");
+    });
+    _loadImage('lib/apps_tab/parcour/assets/Gap.jpeg').then((image) {
+      gapImage = image;
+      pictureLoaded = true;
+    });
+    _loadImage('lib/apps_tab/parcour/assets/Platform.png').then((image) {
+      platformImage = image;
+      pictureLoaded = true;
     });
   }
 
@@ -425,6 +431,8 @@ void _resetGame() {
                     obstacleImage: obstacleImage,
                     backgroundImage: backgroundImage,
                     groundImage: groundImage,
+                    gapImage: gapImage,
+                    platformImage: platformImage,
                     backgroundOffset: backgroundOffset,
                   ),
                   child: Container(),
