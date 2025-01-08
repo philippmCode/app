@@ -315,7 +315,7 @@ Widget _buildButtons() {
         ? 'Set Baseline & Start Game'
         : _pausedGame
             ? 'Resume Game'
-            : 'Pause Game'),
+            : 'Pause Game',),
   );
 }
 

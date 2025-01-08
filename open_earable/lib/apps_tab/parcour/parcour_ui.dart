@@ -46,7 +46,7 @@ class _ParcourUIState extends State<ParcourUI> {
   final double _gravity = 9.81;
 
   /// Pitch angle in radians.
-  double _pitch = 0.0;
+  final double _pitch = 0.0;
 
   /// The height of the jump.
   double _height = 0.0;
