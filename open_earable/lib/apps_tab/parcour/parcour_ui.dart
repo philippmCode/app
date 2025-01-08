@@ -212,6 +212,7 @@ class _ParcourUIState extends State<ParcourUI> {
 
   void updateGame(double dt) {
 
+    print("updating game");
     if (!widget.gameState.isGameRunning) return; // Verhindere weitere Updates, wenn das Spiel gestoppt wurde
     setState(() {
 
@@ -407,6 +408,8 @@ void _resetGame() {
   @override
   Widget build(BuildContext context) {
   
+    print("building parcour_ui");
+    print("gameState: ${widget.gameState.isGameRunning}");
     if (widget.gameState.isGameRunning) {
       double timeNow = widget.gameState.currentTime; 
       double dt = timeNow - widget.gameState.lastUpdateTime;

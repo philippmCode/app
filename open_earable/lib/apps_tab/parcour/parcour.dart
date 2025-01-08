@@ -236,7 +236,7 @@ class ParcourState extends State<Parcour>
   /// Builds the UI for the Parcour game.
   @override
   Widget build(BuildContext context) {
-    ///print("wir builden in parcour.dart");
+    print("wir builden in parcour.dart");
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
