@@ -39,7 +39,6 @@ class GameState {
 
   void startGameState() {
     initializeTimer();
-    print("starten das Game");
     isGameRunning = true;
   }
 
@@ -152,7 +151,6 @@ class ParcourState extends State<Parcour>
   /// Starts the jump height measurement process.
   /// It sets the sampling rate, initializes or resets variables, and begins listening to sensor data.
   void _startGame() {
-    print("Starting game");
 
     gameState.startGameState();
 
@@ -165,7 +163,6 @@ class ParcourState extends State<Parcour>
   }
 
   void pauseGame() {
-    print("Pausing game");
     gameState.pauseGame();
     _pausedGame = true;
     setState(() {
@@ -174,7 +171,6 @@ class ParcourState extends State<Parcour>
   }
 
   void resumeGame() {
-    print("Resuming game in parcour");
     gameState.resumeGame();
     _pausedGame = false;
     setState(() {

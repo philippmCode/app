@@ -100,7 +100,6 @@ class _ParcourUIState extends State<ParcourUI> {
 
   @override
   void initState() {
-    print("init von parcour_chart");
     super.initState();
     double screenWidth = MediaQuery.of(context).size.width; // Breite des Bildschirms
     levelManager = LevelManager(screenWidth: screenWidth);
@@ -150,7 +149,6 @@ class _ParcourUIState extends State<ParcourUI> {
       
   /// Sets up the listeners for the data.
   void _setupListeners() {
-    print("setupListeners");
     _kalmanX = SimpleKalman(
       errorMeasure: _errorMeasureAcc,
       errorEstimate: _errorMeasureAcc,
@@ -351,7 +349,6 @@ class _ParcourUIState extends State<ParcourUI> {
         break; // break the loop
       }
       else if (enteredGap && !isOverGap) {
-        print("calling the method to leave the gap");
         player.leaveGap();
         enteredGap = false;
       }
@@ -369,13 +366,11 @@ class _ParcourUIState extends State<ParcourUI> {
                             playerRect.right > platformRect.left &&
                             playerRect.left < platformRect.right;
       if (isOverPlatform && !enteredPlatform) {
-        print("player is over platform");
         player.enterPlatform(platform);
         enteredPlatform = true;
         break; // break the loop
       }
       else if (enteredPlatform && !isOverPlatform && platform == player.platform) {
-        print("calling the method to leave the platform");
         player.leavePlatform();
         enteredPlatform = false;
       }
@@ -388,7 +383,6 @@ class _ParcourUIState extends State<ParcourUI> {
     for (var obstacle in obstacles) {
 
       if (player.getRect().overlaps(obstacle.getRect())) {
-        print("obstacle collision detected");
         _handleCollision();
         break; // break the loop
       }
@@ -399,11 +393,6 @@ class _ParcourUIState extends State<ParcourUI> {
       player.getRect().left < gap.getRect().right && // player has not yet entered the gap
       player.getRect().bottom >= gap.getRect().top && // player is at the same height as the gap
       player.getRect().top <= gap.getRect().bottom) {
-        print("gap collision detected");
-        print("player right: ${player.getRect().right}");
-        print ("gap right: ${gap.getRect().right}");
-        print("player bottom: ${player.getRect().bottom}");
-        print("gap top: ${gap.getRect().top}");
         _handleCollision();
         break; // break the loop
       }
@@ -413,7 +402,6 @@ class _ParcourUIState extends State<ParcourUI> {
   // handle the collision
   void _handleCollision() {
 
-    print("collision detected");
     levelManager.reset();
     widget.gameState.endGameState();
     widget.gameState.distance = distanceAtLevelStart; // set the distance back
