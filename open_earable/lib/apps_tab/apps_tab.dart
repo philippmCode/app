@@ -36,7 +36,7 @@ class AppsTab extends StatelessWidget {
         AppInfo(
         logoPath: "lib/apps_tab/parcour/assets/parcour.png",
         title: "Parcour",
-        description: "Parcour game",
+        description: "Make the player jump by jumping in real life",
         onTap: () {
           Navigator.push(
             context,
