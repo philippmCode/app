@@ -74,6 +74,9 @@ class _ParcourUIState extends State<ParcourUI> {
   late ui.Image playerImage;
   late ui.Image obstacleImage;
   late ui.Image backgroundImage;
+  late ui.Image groundImage;
+  late ui.Image gapImage;
+  late ui.Image platformImage;
   bool pictureLoaded = false;
   double backgroundOffset = 0.0;
 
@@ -111,22 +114,30 @@ class _ParcourUIState extends State<ParcourUI> {
     );
     playerRect = player.getRect();
     // load the images
-    _loadImage('lib/apps_tab/parcour/assets/Player.jpeg').then((image) {
+    _loadImage('lib/apps_tab/parcour/assets/Player.png').then((image) {
       playerImage = image;
       pictureLoaded = true;
-      print("Player image loaded: ${image.width}x${image.height}");
     });
     _loadImage('lib/apps_tab/parcour/assets/Skyline.jpeg').then((image) {
       backgroundImage = image;
       pictureLoaded = true;
-      print("Player image loaded: ${image.width}x${image.height}");
     });
-    _loadImage('lib/apps_tab/parcour/assets/Obstacle.jpg').then((image) {
+    _loadImage('lib/apps_tab/parcour/assets/Obstacle.png').then((image) {
       obstacleImage = image;
       pictureLoaded = true;
-      print("Obstacle image loaded: ${image.width}x${image.height}");
     });
-
+    _loadImage('lib/apps_tab/parcour/assets/Ground.jpeg').then((image) {
+      groundImage = image;
+      pictureLoaded = true;
+    });
+    _loadImage('lib/apps_tab/parcour/assets/Gap.jpeg').then((image) {
+      gapImage = image;
+      pictureLoaded = true;
+    });
+    _loadImage('lib/apps_tab/parcour/assets/Platform.png').then((image) {
+      platformImage = image;
+      pictureLoaded = true;
+    });
   }
 
   // load the image from the assets
@@ -415,7 +426,7 @@ class _ParcourUIState extends State<ParcourUI> {
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: Text("Collision detected!"),
+        title: Text("Collision detected. You were caught!"),
         content: Text("Try again!"),
         actions: [
           TextButton(
@@ -471,6 +482,9 @@ void _resetGame() {
                     playerImage: playerImage,
                     obstacleImage: obstacleImage,
                     backgroundImage: backgroundImage,
+                    groundImage: groundImage,
+                    gapImage: gapImage,
+                    platformImage: platformImage,
                     backgroundOffset: backgroundOffset,
                   ),
                   child: Container(),
@@ -479,7 +493,7 @@ void _resetGame() {
               LinearProgressIndicator(
                 value: progress,
                 backgroundColor: Colors.grey,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.yellow),
               ),
             ],
           ),
@@ -490,7 +504,7 @@ void _resetGame() {
                 padding: const EdgeInsets.only(top: 20.0), // move text down
                 child: Container(
                   padding: EdgeInsets.all(16.0),
-                  color: Colors.black54,
+                  color: Colors.black,
                   child: Text(
                     levelText,
                     style: TextStyle(
