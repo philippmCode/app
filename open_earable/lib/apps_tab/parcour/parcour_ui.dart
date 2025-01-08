@@ -23,11 +23,8 @@ class ParcourUI extends StatefulWidget {
   final GameState gameState;
   final ParcourState parcourState;
 
-  /// The title of the page.
-  final String title;
-
   /// Constructs a ParcourUI object with a title, openEarable, gameState, and parcourState.
-  const ParcourUI(this.parcourState, this.gameState, this.openEarable, this.title, {super.key});
+  const ParcourUI(this.parcourState, this.gameState, this.openEarable, {super.key});
 
   @override
   State<ParcourUI> createState() => _ParcourUIState();

@@ -268,7 +268,7 @@ class ParcourState extends State<Parcour>
         Expanded(
           child: (!widget.openEarable.bleManager.connected)
               ? EarableNotConnectedWarning()
-              : ParcourUI(this, gameState, widget.openEarable, "Parcour"),
+              : ParcourUI(this, gameState, widget.openEarable),
         ),
           SizedBox(height: 20), // Margin between chart and button
         Align(
