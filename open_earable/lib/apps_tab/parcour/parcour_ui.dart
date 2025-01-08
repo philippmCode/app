@@ -74,7 +74,12 @@ class _ParcourUIState extends State<ParcourUI> {
   late ui.Image groundImage;
   late ui.Image gapImage;
   late ui.Image platformImage;
-  bool pictureLoaded = false;
+  bool playerImageLoaded = false;
+  bool obstacleImageLoaded = false;
+  bool backgroundImageLoaded = false;
+  bool groundImageLoaded = false;
+  bool gapImageLoaded = false;
+  bool platformImageLoaded = false;
   double backgroundOffset = 0.0;
 
   // the currently active game elements
@@ -109,30 +114,31 @@ class _ParcourUIState extends State<ParcourUI> {
         groundLevel: 300,
     );
     playerRect = player.getRect();
+    
     // load the images
     _loadImage('lib/apps_tab/parcour/assets/Player.png').then((image) {
       playerImage = image;
-      pictureLoaded = true;
+      playerImageLoaded = true;
     });
     _loadImage('lib/apps_tab/parcour/assets/Skyline.jpeg').then((image) {
       backgroundImage = image;
-      pictureLoaded = true;
+      backgroundImageLoaded = true;
     });
     _loadImage('lib/apps_tab/parcour/assets/Obstacle.png').then((image) {
       obstacleImage = image;
-      pictureLoaded = true;
+      obstacleImageLoaded = true;
     });
     _loadImage('lib/apps_tab/parcour/assets/Ground.jpeg').then((image) {
       groundImage = image;
-      pictureLoaded = true;
+      groundImageLoaded = true;
     });
     _loadImage('lib/apps_tab/parcour/assets/Gap.jpeg').then((image) {
       gapImage = image;
-      pictureLoaded = true;
+      gapImageLoaded = true;
     });
     _loadImage('lib/apps_tab/parcour/assets/Platform.png').then((image) {
       platformImage = image;
-      pictureLoaded = true;
+      platformImageLoaded = true;
     });
   }
 
@@ -451,7 +457,7 @@ void _resetGame() {
       updateGame(dt);
       backgroundOffset -= 1;
     }
-    return pictureLoaded
+    return playerImageLoaded && obstacleImageLoaded && backgroundImageLoaded && groundImageLoaded && gapImageLoaded && platformImageLoaded
         ? Stack(
         children: [
           Column(
