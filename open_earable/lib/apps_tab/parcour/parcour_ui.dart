@@ -257,7 +257,7 @@ class _ParcourUIState extends State<ParcourUI> {
       for (var obstacle in obstacles) {
         obstacle.update(dt);
         if (obstacle.x < -obstacle.width) {
-          obstaclesToRemove.add(obstacle); // Füge das Hindernis zur Liste der zu entfernenden Hindernisse hinzu
+          obstaclesToRemove.add(obstacle);
         }
       }
       obstacles.removeWhere((obstacle) => obstaclesToRemove.contains(obstacle));
@@ -265,7 +265,7 @@ class _ParcourUIState extends State<ParcourUI> {
 
   void updateGame(double dt) {
 
-    if (!widget.gameState.isGameRunning) return; // Verhindere weitere Updates, wenn das Spiel gestoppt wurde
+    if (!widget.gameState.isGameRunning) return; // prevent further updates after game is over
     setState(() {
 
       player.update(dt);
