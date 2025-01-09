@@ -162,7 +162,7 @@ class ParcourState extends State<Parcour>
     });
   }
 
-  void pauseGame() {
+  void _pauseGame() {
     gameState.pauseGame();
     _pausedGame = true;
     setState(() {
@@ -170,7 +170,7 @@ class ParcourState extends State<Parcour>
     });
   }
 
-  void resumeGame() {
+  void _resumeGame() {
     gameState.resumeGame();
     _pausedGame = false;
     setState(() {
@@ -321,9 +321,9 @@ class ParcourState extends State<Parcour>
               if (!_gameActive) {
                 _startGame(); // Spiel starten
               } else if (_pausedGame) {
-                resumeGame(); // Spiel fortsetzen
+                _resumeGame(); // Spiel fortsetzen
               } else {
-                pauseGame(); // Spiel pausieren
+                _pauseGame(); // Spiel pausieren
               }
             }
           : null,

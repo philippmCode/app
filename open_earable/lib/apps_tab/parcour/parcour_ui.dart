@@ -228,7 +228,7 @@ class _ParcourUIState extends State<ParcourUI> {
   }
 
   // update the platforms and remove those that are out of the screen
-  void updatePlatforms(double dt) {
+  void _updatePlatforms(double dt) {
       List<Platform> platformsToRemove = [];
       for (var platform in platforms) {
         platform.update(dt);
@@ -240,7 +240,7 @@ class _ParcourUIState extends State<ParcourUI> {
   }
 
   // update the gaps and remove those that are out of the screen
-  void updateGaps(double dt) {
+  void _updateGaps(double dt) {
       List<Gap> gapsToRemove = [];
       for (var gap in gaps) {
         gap.update(dt);
@@ -252,7 +252,7 @@ class _ParcourUIState extends State<ParcourUI> {
   }
 
   // update the obstacles and remove those that are out of the screen
-  void updateObstacles(double dt) {
+  void _updateObstacles(double dt) {
       List<Obstacle> obstaclesToRemove = [];
       for (var obstacle in obstacles) {
         obstacle.update(dt);
@@ -263,15 +263,15 @@ class _ParcourUIState extends State<ParcourUI> {
       obstacles.removeWhere((obstacle) => obstaclesToRemove.contains(obstacle));
   }
 
-  void updateGame(double dt) {
+  void _updateGame(double dt) {
 
     if (!widget.gameState.isGameRunning) return; // prevent further updates after game is over
     setState(() {
 
       player.update(dt);
-      updatePlatforms(dt);
-      updateGaps(dt);
-      updateObstacles(dt);
+      _updatePlatforms(dt);
+      _updateGaps(dt);
+      _updateObstacles(dt);
 
       // so the background painter again uses the first image
       if (backgroundOffset <= -MediaQuery.of(context).size.width) {
@@ -331,14 +331,14 @@ class _ParcourUIState extends State<ParcourUI> {
         progress = ((levelManager.scenarioId -1) / levelManager.levels[levelManager.levelId].scenarios.length);
       });
       playerRect = player.getRect();
-      checkGap();
-      checkPlatform();
-      checkCollisions();
+      _checkGap();
+      _checkPlatform();
+      _checkCollisions();
     });
   }
 
   // check if the player is over a gap
-  void checkGap() {
+  void _checkGap() {
 
     for (var gap in gaps) {
 
@@ -359,7 +359,7 @@ class _ParcourUIState extends State<ParcourUI> {
   }
 
   // check if the player is over a platform
-  void checkPlatform() {
+  void _checkPlatform() {
 
     for (var platform in platforms) {
 
@@ -381,7 +381,7 @@ class _ParcourUIState extends State<ParcourUI> {
   }
 
   // check if the player collides with an obstacle or the right side of a gap
-  void checkCollisions() {
+  void _checkCollisions() {
 
     for (var obstacle in obstacles) {
 
@@ -456,7 +456,7 @@ void _resetGame() {
       double timeNow = widget.gameState.currentTime; 
       double dt = timeNow - widget.gameState.lastUpdateTime;
       widget.gameState.lastUpdateTime = timeNow;
-      updateGame(dt);
+      _updateGame(dt);
       backgroundOffset -= 1;
     }
     return playerImageLoaded && obstacleImageLoaded && backgroundImageLoaded && groundImageLoaded && gapImageLoaded && platformImageLoaded
