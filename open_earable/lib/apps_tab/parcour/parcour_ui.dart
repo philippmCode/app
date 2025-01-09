@@ -484,7 +484,7 @@ void _resetGame() {
               LinearProgressIndicator(
                 value: progress,
                 backgroundColor: Colors.grey,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.yellow),
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
               ),
             ],
           ),
