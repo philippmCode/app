@@ -425,7 +425,9 @@ class _ParcourUIState extends State<ParcourUI> {
               Navigator.of(context).pop();
               _resetGame();
             },
-            child: Text("OK"),
+            child: Text("OK",
+            style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       );
