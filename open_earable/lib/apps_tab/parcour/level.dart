@@ -23,10 +23,12 @@ class LevelManager {
 
   Scenario getScenario() {
     
+    // if the scenarioId is bigger than the number of scenarios in the level, the level is finished
     if (scenarioId >= levels[levelId].scenarios.length) {
       levelId++;
       newLevel = true;
       
+      // continuous loop through the levels
       if (levelId >= levels.length) {
         levelId = 0;
         roundtTrips++;
@@ -42,10 +44,12 @@ class LevelManager {
     return levels[levelId].scenarios[scenarioId++];
   }
 
+  // if a new level was started
   bool getNewLevel() {
     return newLevel;
   }
 
+  // fill the list with predefined levels
   void fillList() {
     levels = _predefinedLevels(screenWidth);
   }
@@ -129,7 +133,7 @@ List<Scenario> _predefinedScenarios(double screenWidth) => [
     length: 3000,
     obstacles: [
       Obstacle(
-          x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
+          x: screenWidth,
           y: 300,
           width: 50,
           height: 50,
@@ -165,28 +169,28 @@ List<Scenario> _predefinedScenarios(double screenWidth) => [
   length: 3000,
   obstacles: [   
       Obstacle(
-      x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
+      x: screenWidth, 
       y: 300,
       width: 50,
       height: 50,
       speed: 300,
     ),   
     Obstacle(
-        x: screenWidth + 250, // Setze die x-Position auf die Breite des Bildschirms
+        x: screenWidth + 250, 
         y: 300,
         width: 50,
         height: 50,
         speed: 300,
       ),
             Obstacle(
-        x: screenWidth + 350, // Setze die x-Position auf die Breite des Bildschirms
+        x: screenWidth + 350, 
         y: 300,
         width: 50,
         height: 50,
         speed: 300,
       ),
       Obstacle(
-        x: screenWidth + 450, // Setze die x-Position auf die Breite des Bildschirms
+        x: screenWidth + 450,
         y: 300,
         width: 50,
         height: 50,
@@ -204,7 +208,7 @@ List<Scenario> _predefinedScenarios(double screenWidth) => [
     length: 3000,
     obstacles: [      
       Obstacle(
-        x: screenWidth + 400, // Setze die x-Position auf die Breite des Bildschirms
+        x: screenWidth + 400,
         y: 300,
         width: 50,
         height: 50,
@@ -221,14 +225,14 @@ List<Scenario> _predefinedScenarios(double screenWidth) => [
     length: 3000,
     obstacles: [      
       Obstacle(
-        x: screenWidth, // Setze die x-Position auf die Breite des Bildschirms
+        x: screenWidth,
         y: 300,
         width: 50,
         height: 50,
         speed: 300,
       ),
       Obstacle(
-        x: screenWidth + 550, // Setze die x-Position auf die Breite des Bildschirms
+        x: screenWidth + 550,
         y: 300,
         width: 50,
         height: 50,

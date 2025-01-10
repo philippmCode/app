@@ -103,7 +103,7 @@ class _ParcourControllerState extends State<ParcourController> {
   @override
   void initState() {
     super.initState();
-    double screenWidth = MediaQuery.of(context).size.width; // Breite des Bildschirms
+    double screenWidth = MediaQuery.of(context).size.width; // width of the screen
     levelManager = LevelManager(screenWidth: screenWidth);
     _setupListeners();
       player = Player(
@@ -263,6 +263,7 @@ class _ParcourControllerState extends State<ParcourController> {
       obstacles.removeWhere((obstacle) => obstaclesToRemove.contains(obstacle));
   }
 
+  // update all game elements and manage the game mechanics
   void _updateGame(double dt) {
 
     if (!widget.gameState.isGameRunning) return; // prevent further updates after game is over

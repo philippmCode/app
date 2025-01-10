@@ -103,6 +103,7 @@ class Player {
     else if (enteredGap) {
 
       if (!isJumping && y < gap!.y) {
+        // move player towards bottom of the gap
         sinkdown(dt, groundLevel + gap!.height);
       }
 
