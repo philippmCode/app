@@ -62,7 +62,6 @@ class Player {
   // move player back to the ground after jump
   void sinkdown(double dt, double targetHeight) {
 
-    print("targetHeight: $targetHeight");
     double movement = targetHeight * dt;
     if (y + movement < targetHeight) {
       y += movement; // move player back towards the ground
@@ -95,44 +94,35 @@ class Player {
 
         double movement = jumpHeight * dt;
         if (y + movement < platform!.y - height) {
-          print("move player back to platform");
           y += movement; // move player back towards the ground
         } 
         else {
           y = platform!.y - height;
-          print("auf plattform gelandet");
         }
     }
     else if (enteredGap) {
 
       if (!isJumping && y < gap!.y) {
-        print("move player down in the gap");
         sinkdown(dt, groundLevel + gap!.height);
       }
 
     }
     else if (y < groundLevel) {
-      print("sinkdown");
       sinkdown(dt, groundLevel);
     }
   }
 
   void jump() {
-    print("calling jump");
     if (!isJumping) {
       isJumping = true;
       jumpHeight = 3 * height;
       startingHeight = y;
-      print("startingHeight: $startingHeight");
-      ///print('Jump initiated to height: $targetHeight'); // Debug-Ausgabe der Sprunggeschwindigkeit
     }
   }
 
   // check if player is in contact with the ground to prevent double jumps
   bool hasGroundContact() {
 
-    print("enteredGap: $enteredGap, y: $y, groundLevel: $groundLevel, gapHeight: ${gap?.height}");
-    print(y == groundLevel || (enteredGap && y == groundLevel + (gap?.height ?? 0)) || (enteredPlatform && y == (platform?.y ?? 0) - height));
     if (y == groundLevel || (enteredGap && y == groundLevel + (gap?.height ?? 0)) || (enteredPlatform && y == (platform?.y ?? 0) - height)) {
       return true;
     }

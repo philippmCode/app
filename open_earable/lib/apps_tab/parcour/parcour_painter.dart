@@ -68,7 +68,7 @@ class ParcourPainter extends CustomPainter {
       Paint(),
     );
 
-    // draw second background image
+    // draw second ground image
     final groundRect2 = Rect.fromLTWH(backgroundOffset + backgroundWidth, 350, backgroundWidth, groundHeight);
     canvas.drawImageRect(
       groundImage,

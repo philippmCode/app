@@ -133,7 +133,6 @@ class ParcourState extends State<Parcour>
 
   /// Sets up listeners to receive sensor data from the OpenEarable device.
   void _setupListeners() {
-    ///print("Setting up listeners");
     _imuSubscription = widget.openEarable.sensorManager
         .subscribeToSensorData(0)
         .listen((data) {
@@ -143,7 +142,6 @@ class ParcourState extends State<Parcour>
       }
       setState(() {
       });
-      ///print("calling to process Sensor Data");
       _processSensorData(data);
     });
   }
@@ -155,7 +153,7 @@ class ParcourState extends State<Parcour>
     gameState.startGameState();
 
     setState(() {
-      // Clear data from previous jump.
+      // Clear previous data.
       _gameActive = true;
       _currentHeight = 0.0;
       _velocity = 0.0;
@@ -199,7 +197,6 @@ class ParcourState extends State<Parcour>
 
   /// Processes incoming sensor data and updates jump height.
   void _processSensorData(Map<String, dynamic> data) {
-    ///print("Processing sensor data");
     /// Kalman filtered accelerometer data for X.
     _accX = _kalmanX.filtered(data["ACC"]["X"]);
 
@@ -233,7 +230,7 @@ class ParcourState extends State<Parcour>
   /// If the device is stationary, the velocity is reset to 0.
   /// Otherwise, it integrates the current acceleration to update velocity and height.
   void _updateHeight(double currentAcc) {
-    ///print("Updating height");
+
     if (_deviceIsStationary(0.3)) {
       _velocity = 0.0;
       _currentHeight = 0.0;
@@ -257,7 +254,7 @@ class ParcourState extends State<Parcour>
   /// Builds the UI for the Parcour game.
   @override
   Widget build(BuildContext context) {
-    ///print("wir builden in parcour.dart");
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
@@ -319,11 +316,11 @@ class ParcourState extends State<Parcour>
       onPressed: _earableConnected
           ? () {
               if (!_gameActive) {
-                _startGame(); // Spiel starten
+                _startGame();
               } else if (_pausedGame) {
-                _resumeGame(); // Spiel fortsetzen
+                _resumeGame();
               } else {
-                _pauseGame(); // Spiel pausieren
+                _pauseGame();
               }
             }
           : null,
@@ -331,8 +328,8 @@ class ParcourState extends State<Parcour>
         backgroundColor: !_gameActive
             ? Colors.greenAccent // Start
             : _pausedGame
-                ? Colors.green // Pausiert
-                : Colors.red, // Aktiv
+                ? Colors.green // Paused
+                : Colors.red, // Active
         foregroundColor: Theme.of(context).colorScheme.surface,
       ),
       child: Text(!_gameActive
