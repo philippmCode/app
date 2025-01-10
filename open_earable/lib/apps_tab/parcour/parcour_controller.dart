@@ -16,22 +16,22 @@ import 'dart:math';
 import 'dart:core';
 import 'dart:ui' as ui;
 
-/// A class representing the ParcourUI.
-class ParcourGame extends StatefulWidget {
+/// A class managing the game
+class ParcourController extends StatefulWidget {
 
   final OpenEarable openEarable;
   final GameState gameState;
   final ParcourState parcourState;
 
-  /// Constructs a ParcourUI object with a title, openEarable, gameState, and parcourState.
-  const ParcourGame(this.parcourState, this.gameState, this.openEarable, {super.key});
+  /// Constructs a ParcourController object with a title, openEarable, gameState, and parcourState.
+  const ParcourController(this.parcourState, this.gameState, this.openEarable, {super.key});
 
   @override
-  State<ParcourGame> createState() => _ParcourGameState();
+  State<ParcourController> createState() => _ParcourControllerState();
 }
 
-/// A class representing the state of a ParcourUI.
-class _ParcourGameState extends State<ParcourGame> {
+/// A class representing the state of a ParcourController.
+class _ParcourControllerState extends State<ParcourController> {
 
   /// The subscription to the data.
   StreamSubscription? _dataSubscription;

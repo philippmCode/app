@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:open_earable/apps_tab/parcour/parcour_game.dart';
+import 'package:open_earable/apps_tab/parcour/parcour_controller.dart';
 import 'dart:async';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'package:simple_kalman/simple_kalman.dart';
@@ -268,7 +268,7 @@ class ParcourState extends State<Parcour>
         Expanded(
           child: (!widget.openEarable.bleManager.connected)
               ? EarableNotConnectedWarning()
-              : ParcourGame(this, gameState, widget.openEarable),
+              : ParcourController(this, gameState, widget.openEarable),
         ),
           SizedBox(height: 20), // Margin between chart and button
         Align(
