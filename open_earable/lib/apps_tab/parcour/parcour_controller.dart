@@ -453,7 +453,7 @@ void _resetGame() {
   @override
   Widget build(BuildContext context) {
   
-    if (widget.gameState.isGameRunning) {
+    if (widget.gameState.isGameRunning) { // game does not have to be updated if it is not running
       double timeNow = widget.gameState.currentTime; 
       double dt = timeNow - widget.gameState.lastUpdateTime;
       widget.gameState.lastUpdateTime = timeNow;
