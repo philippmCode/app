@@ -1,6 +1,9 @@
 # OpenEarable - App v2.0.0
 
-[OpenEarable](https://open-earable.teco.edu) is a new, open-source, Arduino-based platform for ear-based sensing applications. It provides a versatile prototyping platform with support for various sensors and actuators, making it suitable for earable research and development.
+[OpenEarable](https://open-earable.teco.edu) 
+Flutter Abgabe von ujlik 2462655.
+Entwickelt am Mac, getestet auf Mac, iPad und iPhone.
+Beste user experience auf dem iPad.
 
 <p>
   <a href="https://testflight.apple.com/join/Kht3e1Cb">
